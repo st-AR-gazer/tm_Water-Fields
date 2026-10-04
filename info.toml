@@ -1,0 +1,9 @@
+[meta]
+name = "!!!_PluginTemplate"
+author = "ar"
+version = "0.1.0"
+category = "!!!_PluginTemplate"
+
+[script]
+dependencies = []
+optional_dependencies = []
