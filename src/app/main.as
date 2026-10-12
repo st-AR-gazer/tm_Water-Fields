@@ -1,40 +1,38 @@
-namespace PluginTemplate {
+namespace WaterFields {
     namespace App {
         void Main() {
-            log(
-                "Loaded " + PluginTemplate::PluginMeta.Name + " v" + PluginTemplate::PluginMeta.Version,
-                LogLevel::Debug,
-                4,
-                "PluginTemplate::App::Main"
-            );
+            Start();
         }
 
-        bool ShouldRenderWindow() {
-            if (!S_WindowOpen) return false;
-            if (S_HideWithGame && !UI::IsGameUIVisible()) return false;
-            if (S_HideWithOP && !UI::IsOverlayShown()) return false;
-            return true;
+        void Start() {
+            if (g_initialized) return;
+
+            log::Start();
+            g_initialized = true;
+            log::Debug("Loaded " + PluginMeta.Name + " v" + PluginMeta.Version, "WaterFields::App::Start");
         }
 
-        void RenderInterface() {
-            if (!ShouldRenderWindow()) return;
+        void Shutdown() {
+            if (!g_initialized) return;
 
-            if (UI::Begin(MenuTitle() + "###main-" + PluginTemplate::PluginMeta.ID, S_WindowOpen, UI::WindowFlags::None)) {
-                RenderWindow();
-            }
-            UI::End();
+            Authoring::Shutdown();
+            g_initialized = false;
+            log::Debug("Stopped", "WaterFields::App::Shutdown");
+            log::Shutdown();
+        }
+
+        void Update(float dt) {
+            if (!g_initialized) return;
+            Authoring::Update();
         }
 
         void RenderMenu() {
-            if (UI::MenuItem(MenuTitle(), "", S_WindowOpen)) {
-                S_WindowOpen = !S_WindowOpen;
-            }
-        }
+            if (!g_initialized) return;
 
-        void RenderWindow() {
-            UI::Text(PluginTemplate::PluginMeta.Name + " " + PluginTemplate::PluginMeta.Version);
-            UI::Separator();
-            PluginTemplate::Example::RenderPanel();
+            bool clicked = UI::MenuItem(MenuTitle());
+            if (clicked || UI::IsItemClicked(UI::MouseButton::Right)) {
+                Meta::OpenSettings(PluginMeta);
+            }
         }
     }
 }

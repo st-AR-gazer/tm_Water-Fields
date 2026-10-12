@@ -59,7 +59,7 @@ def create_op_file():
                 zipf.write(file_path, archive_name(file_path))
 
     print(f"Created {op_file_name} successfully.")
-    print("Reminder: set logging::S_showDefaultLogs to the default you want before release builds.")
+    print("Reminder: set log::S_showDefaultLogs to the default you want before release builds.")
 
 
 if __name__ == "__main__":

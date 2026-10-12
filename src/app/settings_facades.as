@@ -1,22 +1,18 @@
-namespace PluginTemplate {
+namespace WaterFields {
     namespace App {
         void RenderGeneralSettingsUI() {
-            bool open = UI::BeginChild("##plugin-template-settings-general", vec2(0, 0), false);
+            bool open = UI::BeginChild("##water-fields-settings-general", vec2(0, 0), false);
             if (open) {
-                S_WindowOpen = UI::Checkbox("Show main window", S_WindowOpen);
-                S_HideWithGame = UI::Checkbox("Hide with game UI", S_HideWithGame);
-                S_HideWithOP = UI::Checkbox("Hide with Openplanet UI", S_HideWithOP);
-
-                UI::Separator();
-                PluginTemplate::Example::RenderSettingsUI();
+                UI::Text(Authoring::StateText());
+                if (Authoring::g_lastError.Length > 0) UI::TextWrapped(Authoring::g_lastError);
             }
             UI::EndChild();
         }
 
         void RenderLoggingSettingsUI() {
-            bool open = UI::BeginChild("##plugin-template-settings-logging", vec2(0, 0), false);
+            bool open = UI::BeginChild("##water-fields-settings-logging", vec2(0, 0), false);
             if (open) {
-                logging::RenderSettingsUI("plugin-template-logging");
+                log::RenderSettingsUI("water-fields-logging");
             }
             UI::EndChild();
         }

@@ -1,11 +1,19 @@
 void Main() {
-    PluginTemplate::App::Main();
+    WaterFields::App::Main();
 }
 
-void RenderInterface() {
-    PluginTemplate::App::RenderInterface();
+void Update(float dt) {
+    WaterFields::App::Update(dt);
 }
 
 void RenderMenu() {
-    PluginTemplate::App::RenderMenu();
+    WaterFields::App::RenderMenu();
+}
+
+void OnDisabled() {
+    WaterFields::App::Shutdown();
+}
+
+void OnDestroyed() {
+    WaterFields::App::Shutdown();
 }

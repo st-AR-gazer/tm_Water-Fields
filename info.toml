@@ -1,8 +1,8 @@
 [meta]
-name = "!!!_PluginTemplate"
+name = "Water Fields"
 author = "ar"
 version = "0.1.0"
-category = "!!!_PluginTemplate"
+category = "Utilities"
 
 [script]
 dependencies = []
