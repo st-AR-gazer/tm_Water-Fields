@@ -16,6 +16,8 @@ namespace WaterFields {
             if (!g_initialized) return;
 
             Authoring::Shutdown();
+            Authoring::Assets::g_templatesVerified = false;
+            @Authoring::g_lastResult = null;
             g_initialized = false;
             log::Debug("Stopped", "WaterFields::App::Shutdown");
             log::Shutdown();

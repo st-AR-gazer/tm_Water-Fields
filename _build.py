@@ -29,7 +29,7 @@ def normalize_build_name(filename):
 
 def archive_name(path):
     rel_path = path.relative_to(ROOT)
-    if not args.sanitize:
+    if not args.sanitize or rel_path.parts[0] == "assets":
         return rel_path.as_posix()
 
     parts = list(rel_path.parts)
@@ -52,6 +52,7 @@ def create_op_file():
 
     with zipfile.ZipFile(op_file_name, "w", zipfile.ZIP_DEFLATED) as zipf:
         zip_directory(SRC_DIR, zipf)
+        zip_directory(ROOT / "assets", zipf)
 
         for file in ADDITIONAL_FILES:
             file_path = ROOT / file

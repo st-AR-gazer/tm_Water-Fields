@@ -250,6 +250,29 @@ namespace _IO {
             }
             IO::Move(currentPath, newPath);
         }
+
+        string ReadBinary(const string &in path, uint64 maximumBytes = 65536) {
+            IO::File file(path, IO::FileMode::Read);
+            uint64 size = file.Size();
+            if (size > maximumBytes) {
+                file.Close();
+                throw("File exceeds the supported size: " + path);
+            }
+            auto bytes = file.Read(size);
+            file.Close();
+            bytes.Seek(0);
+            return bytes.ReadString(size);
+        }
+
+        void WriteNewVerified(const string &in path, const string &in bytes) {
+            if (IO::FileExists(path) || IO::FolderExists(path)) throw("File already exists: " + path);
+            IO::File file(path, IO::FileMode::Write);
+            file.Write(bytes);
+            file.Close();
+            if (ReadBinary(path, bytes.Length) != bytes) {
+                throw("File verification failed: " + path);
+            }
+        }
     }
 
     void OpenFolder(const string &in path, bool verbose = false) {

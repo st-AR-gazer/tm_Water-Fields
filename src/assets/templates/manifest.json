@@ -1,0 +1,16 @@
+{
+  "schema": "water-area-generator-assets-v28",
+  "stem": "v28_000_Water_Area",
+  "nativeIdentityOffsets": [61, 177, 2378, 2471, 2553],
+  "wrapperIdentityOffsets": [69, 170, 243, 336, 406],
+  "waterOffsets": [3247, 3948, 4557, 5234, 5911, 6645, 7228, 7814, 8400, 8983],
+  "prefabCoordinates": [],
+  "prefabBoundsOffsets": [],
+  "runtimePointers": 0,
+  "resourceIndices": 0,
+  "markerPivot": [16, 0, 16],
+  "scope": "Portable local files. No runtime pointer substitution.",
+  "archetype": "TrackWallWithHoleWater",
+  "variantCount": 10,
+  "mobilCount": 1
+}
