@@ -19,6 +19,8 @@ internal static class Program {
     private const int MapLimit = 512 * 1024 * 1024;
     private const int AssetLimit = 1024 * 1024;
     private const string Suffix = ".Block.Gbx_CustomBlock";
+    private const float MaxHorizontalSize = 2048;
+    private const float MaxHeight = 256;
 
     private const int NativeDescriptionOffset = 2571;
     private const int WrapperDescriptionOffset = 424;
@@ -146,7 +148,10 @@ internal static class Program {
         Require(
             values.All(float.IsFinite) &&
             values.Take(3).All(v => Math.Abs(v) < 16384) &&
-            values.Skip(3).All(v => v >= .25f && v <= 256),
+            values.Skip(3).All(v => v >= .25f) &&
+            values[3] <= MaxHorizontalSize &&
+            values[4] <= MaxHeight &&
+            values[5] <= MaxHorizontalSize,
             "Unsupported water bounds."
         );
 

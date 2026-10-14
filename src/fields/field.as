@@ -1,5 +1,8 @@
 namespace WaterFields {
     namespace Fields {
+        const float MaxHorizontalSize = 2048;
+        const float MaxHeight = 256;
+
         class Field {
             vec3 minimum;
             vec3 size;
@@ -40,12 +43,12 @@ namespace WaterFields {
             );
             Require(
                 field.size.x >= 0.25f &&
-                field.size.x <= 256 &&
+                field.size.x <= MaxHorizontalSize &&
                 field.size.y >= 0.25f &&
-                field.size.y <= 256 &&
+                field.size.y <= MaxHeight &&
                 field.size.z >= 0.25f &&
-                field.size.z <= 256,
-                "Each water dimension must be between 0.25 and 256 metres."
+                field.size.z <= MaxHorizontalSize,
+                "Water dimensions must be at least 0.25 m, with width/depth up to 2048 m and height up to 256 m."
             );
             auto origin = field.LocalOrigin();
             Require(
