@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+        <BaseIntermediateOutputPath>../dev/helper/obj/</BaseIntermediateOutputPath>
+        <OutputPath>../dev/helper/bin/</OutputPath>
+    </PropertyGroup>
+</Project>

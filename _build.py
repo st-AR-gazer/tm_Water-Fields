@@ -9,10 +9,29 @@ from pathlib import Path
 ROOT = Path.cwd()
 SRC_DIR = ROOT / "src"
 ADDITIONAL_FILES = ("info.toml", "LICENSE", "README.md")
+NATIVE_FILES = (
+    "WaterFields.Export.dll",
+    "liblzo2.dll",
+    "GPL-3.0.txt",
+    "third_party_notices.md",
+)
 
-parser = argparse.ArgumentParser(description="Builds the plugin and creates an .op file.")
-parser.add_argument("-s", "--sanitize", action="store_true", help="Remove underscores and hyphens from packaged file names.")
-parser.add_argument("-o", "--overwrite-name", type=str, default=build_name_overwrite, help="Specify a custom output file name without .op.")
+parser = argparse.ArgumentParser(
+    description="Builds the plugin and creates an .op file."
+)
+parser.add_argument(
+    "-s",
+    "--sanitize",
+    action="store_true",
+    help="Remove underscores and hyphens from packaged file names.",
+)
+parser.add_argument(
+    "-o",
+    "--overwrite-name",
+    type=str,
+    default=build_name_overwrite,
+    help="Specify a custom output file name without .op.",
+)
 args = parser.parse_args()
 
 
@@ -29,7 +48,7 @@ def normalize_build_name(filename):
 
 def archive_name(path):
     rel_path = path.relative_to(ROOT)
-    if not args.sanitize or rel_path.parts[0] == "assets":
+    if not args.sanitize or rel_path.parts[:2] == ("src", "assets"):
         return rel_path.as_posix()
 
     parts = list(rel_path.parts)
@@ -45,6 +64,12 @@ def zip_directory(src_dir, zip_file):
 
 
 def create_op_file():
+    native_dir = SRC_DIR / "assets"
+    for name in NATIVE_FILES:
+        if not (native_dir / name).is_file():
+            raise FileNotFoundError(
+                f"Build the export DLL first: python _build_helper.py ({name} missing)"
+            )
     top_dir_name = ROOT.name
     base_name = args.overwrite_name if args.overwrite_name else top_dir_name
     op_file_name = normalize_build_name(base_name)
@@ -52,7 +77,6 @@ def create_op_file():
 
     with zipfile.ZipFile(op_file_name, "w", zipfile.ZIP_DEFLATED) as zipf:
         zip_directory(SRC_DIR, zipf)
-        zip_directory(ROOT / "assets", zipf)
 
         for file in ADDITIONAL_FILES:
             file_path = ROOT / file
@@ -60,7 +84,9 @@ def create_op_file():
                 zipf.write(file_path, archive_name(file_path))
 
     print(f"Created {op_file_name} successfully.")
-    print("Reminder: set log::S_showDefaultLogs to the default you want before release builds.")
+    print(
+        "Reminder: set log::S_showDefaultLogs to the default you want before release builds."
+    )
 
 
 if __name__ == "__main__":

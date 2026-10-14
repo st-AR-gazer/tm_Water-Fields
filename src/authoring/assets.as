@@ -178,6 +178,8 @@ namespace WaterFields {
                 for (uint i = 0; i < 46656; i++) {
                     string stem = Stem(i);
                     if (Taken(root, records, stem)) continue;
+                    if (root == IO::FromUserGameFolder(Root) &&
+                        Taken(IO::FromUserGameFolder("Blocks/WaterFields_v1/"), records, stem)) continue;
                     _IO::File::WriteNewVerified(root + "reservations/" + stem + ".json", "{\"stem\":\"" + stem + "\"}");
                     result.field.stem = stem;
                     result.assetRoot = root;

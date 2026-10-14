@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <PublishAot>true</PublishAot>
+        <NativeLib>Shared</NativeLib>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <SelfContained>true</SelfContained>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="GBX.NET" Version="[2.4.3]" />
+        <PackageReference Include="GBX.NET.LZO" Version="[2.1.4]" />
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="../src/assets/templates/**/*" LogicalName="WaterFields.Templates.%(Filename)%(Extension)" />
+        <None Include="third_party_notices.md" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+        <None Include="$(NuGetPackageRoot)gbx.net.lzo/2.1.4/LICENSE" Link="GPL-3.0.txt" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="true" />
+    </ItemGroup>
+</Project>

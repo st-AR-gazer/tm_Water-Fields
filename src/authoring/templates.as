@@ -1,7 +1,7 @@
 namespace WaterFields {
     namespace Authoring {
         namespace Templates {
-            const string Root = "assets/templates/";
+            const string Root = "src/assets/templates/";
             const string Native = Root + "Native/v28_000_Water_Area.EDClassic.Gbx";
             const string Wrapper = Root + "v28_000_Water_Area.Block.Gbx";
             const string Prefab = Root + "Native/v28_000_Water_Area.Prefab.Gbx";

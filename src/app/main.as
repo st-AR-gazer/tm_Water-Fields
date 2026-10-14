@@ -16,6 +16,7 @@ namespace WaterFields {
             if (!g_initialized) return;
 
             Authoring::Shutdown();
+            Export::Shutdown();
             Authoring::Assets::g_templatesVerified = false;
             @Authoring::g_lastResult = null;
             g_initialized = false;
@@ -26,6 +27,7 @@ namespace WaterFields {
         void Update(float dt) {
             if (!g_initialized) return;
             Authoring::Update();
+            Export::Update();
         }
 
         void RenderMenu() {

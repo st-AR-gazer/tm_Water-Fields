@@ -91,7 +91,8 @@ namespace WaterFields {
                 auto block = editor.GhostBlocks[i];
                 if (AtAnchor(block, field.anchor) &&
                     block.BlockInfo !is null &&
-                    block.BlockInfo.IdName == field.ModelId()) return block;
+                    block.BlockInfo.IdName == field.ModelId()
+                ) return block;
             }
             return null;
         }

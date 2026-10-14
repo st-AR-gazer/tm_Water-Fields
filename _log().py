@@ -5,7 +5,12 @@ import re
 from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Process log statements in code files.")
-parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose output of all log modifications.")
+parser.add_argument(
+    "-v",
+    "--verbose",
+    action="store_true",
+    help="Enable verbose output of all log modifications.",
+)
 args = parser.parse_args()
 
 default_params = ['""', "LogLevel::Info", "-1", '""']
@@ -93,8 +98,13 @@ def get_namespace_path(lines, index):
         position = 0
 
         while position < len(line):
-            if next_namespace_index < len(namespace_matches) and position == namespace_matches[next_namespace_index].start():
-                pending_namespaces.append(namespace_matches[next_namespace_index].group(1))
+            if (
+                next_namespace_index < len(namespace_matches)
+                and position == namespace_matches[next_namespace_index].start()
+            ):
+                pending_namespaces.append(
+                    namespace_matches[next_namespace_index].group(1)
+                )
                 position = namespace_matches[next_namespace_index].end()
                 next_namespace_index += 1
                 continue
@@ -289,10 +299,14 @@ def find_log_statements(text):
 
             try:
                 close_paren_index = find_matching_paren(text, open_paren_index)
-                next_token_index = skip_whitespace_and_comments(text, close_paren_index + 1)
+                next_token_index = skip_whitespace_and_comments(
+                    text, close_paren_index + 1
+                )
 
                 if next_token_index < len(text) and text[next_token_index] == ";":
-                    statements.append((index, open_paren_index, close_paren_index, next_token_index))
+                    statements.append(
+                        (index, open_paren_index, close_paren_index, next_token_index)
+                    )
                     index = next_token_index + 1
                     continue
 
@@ -373,7 +387,12 @@ def parse_params(log_content):
             elif char == "}":
                 nested_braces -= 1
                 temp.append(char)
-            elif char == "," and nested_parens == 0 and nested_brackets == 0 and nested_braces == 0:
+            elif (
+                char == ","
+                and nested_parens == 0
+                and nested_brackets == 0
+                and nested_braces == 0
+            ):
                 params.append("".join(temp).strip())
                 temp = []
             else:
@@ -385,7 +404,14 @@ def parse_params(log_content):
     if final_param:
         params.append(final_param)
 
-    if in_string or in_line_comment or in_block_comment or nested_parens != 0 or nested_brackets != 0 or nested_braces != 0:
+    if (
+        in_string
+        or in_line_comment
+        or in_block_comment
+        or nested_parens != 0
+        or nested_brackets != 0
+        or nested_braces != 0
+    ):
         raise ValueError("Malformed statement detected in log parameters.")
 
     return params
@@ -435,12 +461,16 @@ def modify_log_statements(file_path, verbose):
 
     for start_index, open_paren_index, close_paren_index, semicolon_index in statements:
         line_number = line_number_from_position(start_index, line_starts)
-        original_statement = content[start_index:semicolon_index + 1]
+        original_statement = content[start_index : semicolon_index + 1]
 
         try:
-            params = parse_params(content[open_paren_index + 1:close_paren_index])
-            updated_params = clean_and_update_params(params, line_number, analysis_lines)
-            new_statement = format_log_statement(updated_params, original_statement, content, start_index)
+            params = parse_params(content[open_paren_index + 1 : close_paren_index])
+            updated_params = clean_and_update_params(
+                params, line_number, analysis_lines
+            )
+            new_statement = format_log_statement(
+                updated_params, original_statement, content, start_index
+            )
         except ValueError as error:
             print(f"\033[31mError in {file_path} on line {line_number}: {error}\033[0m")
             continue
@@ -452,7 +482,9 @@ def modify_log_statements(file_path, verbose):
         if new_statement != original_statement:
             modified = True
             if verbose:
-                print(f"Updated log call in {file_path} on line {line_number}: {new_statement}")
+                print(
+                    f"Updated log call in {file_path} on line {line_number}: {new_statement}"
+                )
 
     if not updated_chunks:
         return False
