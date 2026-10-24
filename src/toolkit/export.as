@@ -1,18 +1,18 @@
 namespace WaterFields {
     namespace Export {
-        Import::Library@ g_library;
-        Import::Function@ g_start;
-        Import::Function@ g_state;
-        string g_request;
-        string g_message;
-        Json::Value@ g_result;
+        Import::Library@ exportLibrary;
+        Import::Function@ startExport;
+        Import::Function@ exportState;
+        string pendingRequest;
+        string statusMessage;
+        Json::Value@ exportResult;
 
         bool Busy() {
-            return g_request.Length > 0;
+            return pendingRequest.Length > 0;
         }
 
         void Load() {
-            if (g_library !is null) return;
+            if (exportLibrary !is null) return;
             string directory = IO::FromStorageFolder("helper/" + Time::Stamp + "-" + Time::Now + "/");
             IO::CreateFolder(directory);
             for (uint i = 0; i < 2; i++) {
@@ -37,9 +37,9 @@ namespace WaterFields {
                 start !is null && state !is null,
                 "Unsupported water export library."
             );
-            @g_library = library;
-            @g_start = start;
-            @g_state = state;
+            @exportLibrary = library;
+            @startExport = start;
+            @exportState = state;
         }
 
         void Start(const string &in requestPath) {
@@ -48,40 +48,40 @@ namespace WaterFields {
                 "A water export is already running."
             );
             Load();
-            int code = g_start.CallInt32(requestPath);
+            int code = startExport.CallInt32(requestPath);
             Fields::Require(
                 code == 0,
                 code == 1 ?
                     "A water export is already running." :
                     "Could not start water export. Use a new request filename and check the DLL installation."
             );
-            @g_result = null;
-            g_request = requestPath;
-            g_message = "Exporting water...";
+            @exportResult = null;
+            pendingRequest = requestPath;
+            statusMessage = "Exporting water...";
         }
 
         void Update() {
-            if (!Busy() || g_state.CallInt32() == 1) return;
+            if (!Busy() || exportState.CallInt32() == 1) return;
             try {
-                auto result = Json::FromFile(g_request + ".result.json");
+                auto result = Json::FromFile(pendingRequest + ".result.json");
                 Fields::Require(
                     string(result["schema"]) == "waterfields-export-result-v1",
                     "Invalid water export result."
                 );
-                @g_result = result;
-                g_message = string(result["status"]) == "verified" ?
+                @exportResult = result;
+                statusMessage = string(result["status"]) == "verified" ?
                     "Water exported: " + string(result["output"]) :
                     string(result["error"]);
             } catch {
-                g_message = "Could not read the water export result: " + getExceptionInfo();
+                statusMessage = "Could not read the water export result: " + getExceptionInfo();
             }
-            g_request = "";
+            pendingRequest = "";
         }
 
         void Shutdown() {
-            g_request = "";
-            @g_result = null;
-            g_message = "";
+            pendingRequest = "";
+            @exportResult = null;
+            statusMessage = "";
         }
     }
 }

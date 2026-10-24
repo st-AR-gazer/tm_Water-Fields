@@ -41,8 +41,8 @@ namespace WaterFields {
             }
         }
 
-        EditorSession g_session;
-        string g_lastError;
+        EditorSession session;
+        string lastError;
 
         EditorSnapshot@ ReadSnapshot() {
             auto snapshot = EditorSnapshot();
@@ -67,37 +67,44 @@ namespace WaterFields {
 
         void Update() {
             try {
-                if (g_session.Observe(ReadSnapshot())) {
+                auto snapshot = ReadSnapshot();
+                History::edits.Observe(
+                    snapshot.mapUid,
+                    snapshot.state != SessionState::Inactive && snapshot.state != SessionState::Unsupported
+                );
+                if (session.Observe(snapshot)) {
                     log::Debug(StateText(), "WaterFields::Authoring::Update");
                 }
-                g_lastError = "";
+                lastError = "";
             } catch {
-                g_session.Reset();
+                session.Reset();
+                History::edits.Reset();
                 string error = getExceptionInfo();
-                if (error != g_lastError) log::Warning(error, "WaterFields::Authoring::Update");
-                g_lastError = error;
+                if (error != lastError) log::Warning(error, "WaterFields::Authoring::Update");
+                lastError = error;
             }
         }
 
         uint64 CaptureSession() {
-            if (!App::g_initialized) return 0;
+            if (!App::initialized) return 0;
             Update();
-            return g_session.Capture();
+            return session.Capture();
         }
 
         bool IsSessionCurrent(uint64 token) {
-            if (!App::g_initialized) return false;
+            if (!App::initialized) return false;
             Update();
-            return g_session.IsCurrent(token);
+            return session.IsCurrent(token);
         }
 
         void Shutdown() {
-            g_session.Reset();
-            g_lastError = "";
+            session.Reset();
+            History::edits.Reset();
+            lastError = "";
         }
 
         string StateText() {
-            auto state = g_session.current.state;
+            auto state = session.current.state;
             if (state == SessionState::Ready) return "Editor ready";
             if (state == SessionState::Waiting) return "Waiting for the editor";
             if (state == SessionState::Testing) return "Test drive active";

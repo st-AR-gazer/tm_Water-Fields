@@ -1,9 +1,9 @@
 [SettingsTab name="General" icon="Cog" order=1]
 void RenderWaterFieldsGeneralSettingsTab() {
-    WaterFields::App::RenderGeneralSettingsUI();
+    WaterFields::App::RenderGeneralSettingsUi();
 }
 
 [SettingsTab name="Logging" icon="ListAlt" order=99]
 void RenderWaterFieldsLoggingSettingsTab() {
-    WaterFields::App::RenderLoggingSettingsUI();
+    WaterFields::App::RenderLoggingSettingsUi();
 }

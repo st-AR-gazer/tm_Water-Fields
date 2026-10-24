@@ -1,6 +1,6 @@
 namespace WaterFields {
     namespace Authoring {
-        void VerifyBlockModel(CGameCtnBlockInfo@ model, Fields::Field@ field) {
+        void VerifyBlockModel(CGameCtnBlockInfo@ model, WaterFields::Fields::Field@ field) {
             Fields::Require(
                 model !is null && model.IdName == field.ModelId(),
                 "Wrong generated model identity."
@@ -10,8 +10,12 @@ namespace WaterFields {
                 "Water variant distribution changed."
             );
             array<CGameCtnBlockInfoVariant@> variants = {model.VariantBaseGround, model.VariantBaseAir};
-            for (uint i = 0; i < model.AdditionalVariantsGround.Length; i++) variants.InsertLast(model.AdditionalVariantsGround[i]);
-            for (uint i = 0; i < model.AdditionalVariantsAir.Length; i++) variants.InsertLast(model.AdditionalVariantsAir[i]);
+            for (uint i = 0; i < model.AdditionalVariantsGround.Length; i++) {
+                variants.InsertLast(model.AdditionalVariantsGround[i]);
+            }
+            for (uint i = 0; i < model.AdditionalVariantsAir.Length; i++) {
+                variants.InsertLast(model.AdditionalVariantsAir[i]);
+            }
             for (uint i = 0; i < variants.Length; i++) {
                 auto variant = variants[i];
                 Fields::Require(
@@ -59,7 +63,7 @@ namespace WaterFields {
                    int(block.Coord.z) == anchor.z;
         }
 
-        void ValidateAnchor(CGameEditorPluginMapMapType@ editor, Fields::Field@ field) {
+        void ValidateAnchor(CGameEditorPluginMapMapType@ editor, WaterFields::Fields::Field@ field) {
             auto anchor = field.anchor;
             auto size = editor.Map.Size;
             Fields::Require(
@@ -86,13 +90,15 @@ namespace WaterFields {
             }
         }
 
-        CGameCtnBlock@ FindPlaced(CGameEditorPluginMapMapType@ editor, Fields::Field@ field) {
+        CGameCtnBlock@ FindPlaced(CGameEditorPluginMapMapType@ editor, WaterFields::Fields::Field@ field) {
             for (uint i = 0; i < editor.GhostBlocks.Length; i++) {
                 auto block = editor.GhostBlocks[i];
                 if (AtAnchor(block, field.anchor) &&
                     block.BlockInfo !is null &&
                     block.BlockInfo.IdName == field.ModelId()
-                ) return block;
+                ) {
+                    return block;
+                }
             }
             return null;
         }
@@ -126,35 +132,38 @@ namespace WaterFields {
                 auto editor = ReadyEditor();
                 ValidateAnchor(editor, result.field);
                 Fields::Require(
-                    result.assetRoot == IO::FromUserGameFolder(Assets::Root),
+                    result.assetRoot == IO::FromUserGameFolder(Assets::assetFolder),
                     "Only installed WaterFields assets can be placed."
                 );
                 auto field = result.field;
+                string nativeBase = result.assetRoot + "Native/" + field.stem;
                 Fields::Require(
                     _IO::File::ReadBinary(result.assetRoot + field.stem + ".Block.Gbx") == result.wrapperBytes &&
-                    _IO::File::ReadBinary(result.assetRoot +
-                                          "Native/" +
-                                          field.stem +
-                                          ".EDClassic.Gbx") == result.nativeBytes &&
-                    _IO::File::ReadBinary(result.assetRoot +
-                                          "Native/" +
-                                          field.stem +
-                                          ".Prefab.Gbx") == result.prefabBytes,
+                    _IO::File::ReadBinary(nativeBase + ".EDClassic.Gbx") == result.nativeBytes &&
+                    _IO::File::ReadBinary(nativeBase + ".Prefab.Gbx") == result.prefabBytes,
                     "Generated assets changed before preload."
                 );
-                auto blocksFolder = Fids::GetUserFolder("Blocks");
+                auto waterFolder = Fids::GetUserFolder(Assets::assetFolder);
+                if (waterFolder is null) {
+                    auto blocksFolder = Fids::GetUserFolder("Blocks");
+                    Fields::Require(
+                        blocksFolder !is null,
+                        "The user Blocks folder is unavailable."
+                    );
+                    Fids::UpdateTree(blocksFolder, false);
+                    @waterFolder = Fids::GetUserFolder(Assets::assetFolder);
+                }
                 Fields::Require(
-                    blocksFolder !is null,
-                    "The user Blocks folder is unavailable."
+                    waterFolder !is null,
+                    "The WaterFields asset folder is unavailable."
                 );
-                Fids::UpdateTree(blocksFolder);
-                string path = Assets::Root + field.stem + ".Block.Gbx";
+                Fids::UpdateTree(waterFolder);
+                string path = Assets::assetFolder + field.stem + ".Block.Gbx";
                 auto fid = Fids::GetUser(path.Replace("/", "\\"));
                 Fields::Require(
                     fid !is null && fid.ParentFolder !is null,
                     "Generated wrapper lookup failed."
                 );
-                Fids::UpdateTree(fid.ParentFolder);
                 auto item = cast<CGameItemModel>(Fids::Preload(fid));
                 Fields::Require(
                     item !is null,
@@ -208,11 +217,11 @@ namespace WaterFields {
                 Fields::Validate(result.field);
                 auto editor = ReadyEditor();
                 ValidateAnchor(editor, result.field);
-                result.mapUid = g_session.current.mapUid;
-                result.mapFileName = g_session.current.mapFileName;
-                string root = IO::FromUserGameFolder(Assets::Root);
+                result.mapUid = session.current.mapUid;
+                result.mapFileName = session.current.mapFileName;
+                string root = IO::FromUserGameFolder(Assets::assetFolder);
                 Fields::Require(
-                    root != Assets::Root,
+                    root != Assets::assetFolder,
                     "Trackmania's user folder is unavailable."
                 );
                 Assets::Generate(result, root, IO::FromStorageFolder("records/"));
@@ -220,7 +229,10 @@ namespace WaterFields {
             } catch {
                 result.error = getExceptionInfo();
             }
-            @g_lastResult = result;
+            if (result.placement == "placed" || result.placement == "residual") {
+                History::edits.Record({result.field}, true);
+            }
+            @lastResult = result;
             log::Info(result.Summary(), "WaterFields::Authoring::Create");
             return result;
         }

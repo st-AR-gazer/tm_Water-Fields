@@ -1,7 +1,7 @@
 namespace WaterFields {
     namespace Authoring {
         class Result {
-            Fields::Field@ field = Fields::Field();
+            WaterFields::Fields::Field@ field = WaterFields::Fields::Field();
             string generation = "not-started";
             string placement = "not-attempted";
             string error;
@@ -17,7 +17,7 @@ namespace WaterFields {
             Json::Value@ Record() const {
                 auto record = Json::Object();
                 record["schema"] = "waterfields-generation-v1";
-                record["authoringVersion"] = PluginMeta.Version;
+                record["authoringVersion"] = pluginMeta.Version;
                 record["stem"] = field.stem;
                 record["minimum"] = Fields::Vector(field.minimum);
                 record["size"] = Fields::Vector(field.size);
@@ -56,6 +56,6 @@ namespace WaterFields {
             }
         }
 
-        Result@ g_lastResult;
+        Result@ lastResult;
     }
 }

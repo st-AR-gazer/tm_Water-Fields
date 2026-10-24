@@ -5,6 +5,5 @@ version = "0.1.0"
 category = "Utilities"
 
 [script]
-timeout = 20000
-dependencies = []
+dependencies = ["Camera"]
 optional_dependencies = []

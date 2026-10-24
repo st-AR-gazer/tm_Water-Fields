@@ -6,23 +6,21 @@ using System.Text.Json.Nodes;
 namespace WaterFields.Export;
 
 internal static class NativeExports {
-    private const int StateIdle = 0;
-    private const int StateRunning = 1;
-    private const int StateSucceeded = 2;
-    private const int StateFailed = 3;
-    private const int StateTimedOut = 4;
+    private const int stateIdle = 0;
+    private const int stateRunning = 1;
+    private const int stateSucceeded = 2;
+    private const int stateFailed = 3;
+    private const int stateTimedOut = 4;
 
-    private const int StartAccepted = 0;
-    private const int StartBusy = 1;
-    private const int StartRejected = 2;
+    private const int startAccepted = 0;
+    private const int startBusy = 1;
+    private const int startRejected = 2;
 
-    // PIN keeps Native AOT loaded until process exit; it does not support unloading.
-    private const uint ModuleFlagPin = 0x00000001;
-    // FROM_ADDRESS finds this DLL through the Start function's address.
-    private const uint ModuleFlagFromAddress = 0x00000004;
+    private const uint moduleFlagPin = 0x00000001;
+    private const uint moduleFlagFromAddress = 0x00000004;
 
-    private static readonly object Gate = new();
-    private static int state = StateIdle;
+    private static readonly object gate = new();
+    private static int state = stateIdle;
     private static nint lzo;
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
@@ -37,7 +35,7 @@ internal static class NativeExports {
         }
 
         var startAddress = (nint)(delegate* unmanaged[Cdecl]<nint, int>)&Start;
-        uint flags = ModuleFlagPin | ModuleFlagFromAddress;
+        uint flags = moduleFlagPin | moduleFlagFromAddress;
 
         if (!GetModuleHandleExW(flags, startAddress, out var module)) {
             throw new IOException("Could not retain the export library.");
@@ -56,9 +54,9 @@ internal static class NativeExports {
 
     [UnmanagedCallersOnly(EntryPoint = "WaterFields_StartExportV1", CallConvs = [typeof(CallConvCdecl)])]
     private static int Start(nint requestUtf8) {
-        lock (Gate) {
-            if (state == StateRunning) {
-                return StartBusy;
+        lock (gate) {
+            if (state == stateRunning) {
+                return startBusy;
             }
 
             FileStream? result = null;
@@ -69,22 +67,22 @@ internal static class NativeExports {
                 var request = Marshal.PtrToStringUTF8(requestUtf8);
 
                 if (string.IsNullOrWhiteSpace(request)) {
-                    return StartRejected;
+                    return startRejected;
                 }
 
                 request = Path.GetFullPath(request);
                 result = new FileStream(request + ".result.json", FileMode.CreateNew, FileAccess.Write, FileShare.Read);
 
-                state = StateRunning;
+                state = stateRunning;
                 var destination = result;
                 _ = Task.Run(() => Run(request, destination));
 
-                return StartAccepted;
+                return startAccepted;
             } catch {
                 result?.Dispose();
-                state = StateFailed;
+                state = stateFailed;
 
-                return StartRejected;
+                return startRejected;
             }
         }
     }
@@ -92,26 +90,26 @@ internal static class NativeExports {
     [UnmanagedCallersOnly(EntryPoint = "WaterFields_ExportStateV1", CallConvs = [typeof(CallConvCdecl)])]
     private static int State() {
         try {
-            lock (Gate) {
+            lock (gate) {
                 PinLibrary();
             }
 
             return Volatile.Read(ref state);
         } catch {
-            return StateFailed;
+            return stateFailed;
         }
     }
 
     private static void Run(string request, FileStream destination) {
         JsonObject result;
-        var finalState = StateSucceeded;
+        var finalState = stateSucceeded;
 
         try {
             using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             result = Program.Run(request, deadline.Token);
         } catch (Exception e) {
             bool timedOut = e is OperationCanceledException;
-            finalState = timedOut ? StateTimedOut : StateFailed;
+            finalState = timedOut ? stateTimedOut : stateFailed;
 
             result = new JsonObject {
                 ["schema"] = "waterfields-export-result-v1",
@@ -129,7 +127,7 @@ internal static class NativeExports {
                 destination.Flush(true);
             }
         } catch {
-            finalState = StateFailed;
+            finalState = stateFailed;
         } finally {
             Volatile.Write(ref state, finalState);
         }

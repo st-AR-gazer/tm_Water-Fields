@@ -16,14 +16,14 @@ using GBX.NET.Serialization.Chunking;
 namespace WaterFields.Export;
 
 internal static class Program {
-    private const int MapLimit = 512 * 1024 * 1024;
-    private const int AssetLimit = 1024 * 1024;
-    private const string Suffix = ".Block.Gbx_CustomBlock";
-    private const float MaxHorizontalSize = 2048;
-    private const float MaxHeight = 256;
+    private const int mapLimit = 512 * 1024 * 1024;
+    private const int assetLimit = 1024 * 1024;
+    private const string modelSuffix = ".Block.Gbx_CustomBlock";
+    private const float maxHorizontalSize = 2048;
+    private const float maxHeight = 256;
 
-    private const int NativeDescriptionOffset = 2571;
-    private const int WrapperDescriptionOffset = 424;
+    private const int nativeDescriptionOffset = 2571;
+    private const int wrapperDescriptionOffset = 424;
 
     internal static JsonObject Run(string requestPath, CancellationToken deadline) {
         Gbx.LZO = new Lzo();
@@ -40,8 +40,8 @@ internal static class Program {
         string assets = Path.GetFullPath(root.GetProperty("assetRoot").GetString()!);
 
         Require(
-            input.EndsWith(".Map.Gbx", StringComparison.OrdinalIgnoreCase) &&
-            output.EndsWith(".Map.Gbx", StringComparison.OrdinalIgnoreCase),
+            input.EndsWith(".Map.Gbx", StringComparison.OrdinalIgnoreCase)
+            && output.EndsWith(".Map.Gbx", StringComparison.OrdinalIgnoreCase),
             "Choose .Map.Gbx files."
         );
         Require(
@@ -72,7 +72,7 @@ internal static class Program {
 
     private static Gbx<CGameCtnChallenge> ParseMap(byte[] bytes) {
         using var stream = new MemoryStream(bytes, false);
-        var gbx = Gbx.Parse<CGameCtnChallenge>(stream, Limits(MapLimit));
+        var gbx = Gbx.Parse<CGameCtnChallenge>(stream, Limits(mapLimit));
 
         if (gbx.Body.Exception is not null) {
             throw gbx.Body.Exception;
@@ -91,7 +91,7 @@ internal static class Program {
         using var stream = new MemoryStream();
         gbx.Save(stream);
 
-        Require(stream.Length <= MapLimit, "Export is too large.");
+        Require(stream.Length <= mapLimit, "Export is too large.");
 
         return stream.ToArray();
     }
@@ -132,8 +132,8 @@ internal static class Program {
         string metadata = wrapper.Description ?? "";
 
         Require(
-            metadata.StartsWith(prefix, StringComparison.Ordinal) &&
-            Regex.IsMatch(metadata[prefix.Length..], "^[0-9a-f]{48}$"),
+            metadata.StartsWith(prefix, StringComparison.Ordinal)
+            && Regex.IsMatch(metadata[prefix.Length..], "^[0-9a-f]{48}$"),
             "Invalid water metadata."
         );
 
@@ -146,12 +146,12 @@ internal static class Program {
         }
 
         Require(
-            values.All(float.IsFinite) &&
-            values.Take(3).All(v => Math.Abs(v) < 16384) &&
-            values.Skip(3).All(v => v >= .25f) &&
-            values[3] <= MaxHorizontalSize &&
-            values[4] <= MaxHeight &&
-            values[5] <= MaxHorizontalSize,
+            values.All(float.IsFinite)
+            && values.Take(3).All(v => Math.Abs(v) < 16384)
+            && values.Skip(3).All(v => v >= .25f)
+            && values[3] <= maxHorizontalSize
+            && values[4] <= maxHeight
+            && values[5] <= maxHorizontalSize,
             "Unsupported water bounds."
         );
 
@@ -184,8 +184,8 @@ internal static class Program {
             transformBytes.CopyTo(native, offset.GetInt32());
         }
 
-        var expectedNative = WithDescription(native, NativeDescriptionOffset, metadata);
-        expectedWrapper = WithDescription(expectedWrapper, WrapperDescriptionOffset, metadata);
+        var expectedNative = WithDescription(native, nativeDescriptionOffset, metadata);
+        expectedWrapper = WithDescription(expectedWrapper, wrapperDescriptionOffset, metadata);
         var expectedPrefab = Template("v28_000_Water_Area.Prefab.Gbx");
 
         Require(
@@ -210,10 +210,7 @@ internal static class Program {
                 continue;
             }
 
-            Require(
-                refs.AncestorLevel == 0 && refs.Resources.Count == 0,
-                "Unsupported asset reference table: " + path
-            );
+            Require(refs.AncestorLevel == 0 && refs.Resources.Count == 0, "Unsupported asset reference table: " + path);
 
             string directory = Path.GetDirectoryName(path) ?? "";
 
@@ -234,7 +231,7 @@ internal static class Program {
         );
 
         using var stream = new MemoryStream(copy, false);
-        var gbx = Gbx.Parse<CGameItemModel>(stream, Limits(AssetLimit));
+        var gbx = Gbx.Parse<CGameItemModel>(stream, Limits(assetLimit));
 
         if (gbx.Body.Exception is not null) {
             throw gbx.Body.Exception;
@@ -264,10 +261,7 @@ internal static class Program {
             );
 
             total += entry.Length;
-            Require(
-                entry.Length <= 64 * 1024 * 1024 && total <= 128 * 1024 * 1024,
-                "Embedded files are too large."
-            );
+            Require(entry.Length <= 64 * 1024 * 1024 && total <= 128 * 1024 * 1024, "Embedded files are too large.");
 
             using var stream = entry.Open();
             var bytes = new byte[(int)entry.Length];
@@ -307,7 +301,7 @@ internal static class Program {
     ) {
         deadline.ThrowIfCancellationRequested();
 
-        var original = Read(input, MapLimit);
+        var original = Read(input, mapLimit);
         var gbx = ParseMap(original);
         var map = gbx.Node;
 
@@ -317,7 +311,7 @@ internal static class Program {
         var placements = (map.Blocks ?? []).Concat(map.BakedBlocks ?? []).ToArray();
         var fields = placements
             .Where(b => Regex.IsMatch(b.Name ?? "", @"^wf1_[A-Z0-9]{3}_Water_Area\.Block\.Gbx_CustomBlock$"))
-            .GroupBy(b => b.Name![..^Suffix.Length])
+            .GroupBy(b => b.Name![..^modelSuffix.Length])
             .ToArray();
 
         Require(fields.Length is > 0 and <= 4096, "No supported water fields, or too many fields.");
@@ -344,7 +338,7 @@ internal static class Program {
                 "Native/" + stem + ".Prefab.Gbx"
             }) {
                 string source = Path.Combine(assetRoot, path);
-                var bytes = Read(source, AssetLimit);
+                var bytes = Read(source, assetLimit);
 
                 built.Add(path, bytes);
                 evidence.Add(source, bytes);
@@ -414,10 +408,10 @@ internal static class Program {
             );
         }
 
-        Require(Read(input, MapLimit).SequenceEqual(original), "Input map changed during export.");
+        Require(Read(input, mapLimit).SequenceEqual(original), "Input map changed during export.");
 
         foreach (var (path, bytes) in evidence) {
-            Require(Read(path, AssetLimit).SequenceEqual(bytes), "Source asset changed during export: " + path);
+            Require(Read(path, assetLimit).SequenceEqual(bytes), "Source asset changed during export: " + path);
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
@@ -429,7 +423,7 @@ internal static class Program {
                 file.Flush(true);
             }
 
-            Require(Read(temporary, MapLimit).SequenceEqual(result), "Written export differs from verified bytes.");
+            Require(Read(temporary, mapLimit).SequenceEqual(result), "Written export differs from verified bytes.");
             deadline.ThrowIfCancellationRequested();
 
             File.Move(temporary, output, false);
@@ -476,11 +470,11 @@ internal static class Program {
     }
 
     private static int HeaderTypeOffset(byte[] bytes) {
-        if (bytes.Length < 25 ||
-            Encoding.ASCII.GetString(bytes, 0, 3) != "GBX" ||
-            BinaryPrimitives.ReadUInt16LittleEndian(bytes.AsSpan(3)) != 6 ||
-            bytes[5] != (byte)'B' ||
-            BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(9)) != 0x2E002000) {
+        if (bytes.Length < 25
+            || Encoding.ASCII.GetString(bytes, 0, 3) != "GBX"
+            || BinaryPrimitives.ReadUInt16LittleEndian(bytes.AsSpan(3)) != 6
+            || bytes[5] != (byte)'B'
+            || BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(9)) != 0x2E002000) {
             throw new InvalidDataException("Expected binary GBX v6 CGameItemModel.");
         }
 
@@ -521,10 +515,10 @@ internal static class Program {
     }
 
     private static void ValidateStrippedWrapper(byte[] embedded, byte[] generated) {
-        Require(embedded.Length <= AssetLimit, "Embedded water wrapper is too large.");
+        Require(embedded.Length <= assetLimit, "Embedded water wrapper is too large.");
 
         using var stream = new MemoryStream(embedded, false);
-        var old = Gbx.Parse<CGameItemModel>(stream, Limits(AssetLimit));
+        var old = Gbx.Parse<CGameItemModel>(stream, Limits(assetLimit));
 
         if (old.Body.Exception is not null) {
             throw old.Body.Exception;
@@ -537,10 +531,7 @@ internal static class Program {
             old.Node.Description == full.Node.Description,
             "Embedded water wrapper metadata differs from its package."
         );
-        Require(
-            old.Node.ItemTypeE == CGameItemModel.EItemType.Block,
-            "Embedded water wrapper is not a block."
-        );
+        Require(old.Node.ItemTypeE == CGameItemModel.EItemType.Block, "Embedded water wrapper is not a block.");
         Require(
             old.Node.EntityModel is null && old.Node.EntityModelEditionFile is null,
             "Embedded water wrapper contains a compiled model or an external editor recipe."

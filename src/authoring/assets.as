@@ -1,8 +1,10 @@
 namespace WaterFields {
     namespace Authoring {
         namespace Assets {
-            const string Root = "Blocks/WaterFields/";
-            bool g_templatesVerified = false;
+            const string assetFolder = "Blocks/WaterFields/";
+            const uint nativeDescriptionOffset = 2571;
+            const uint wrapperDescriptionOffset = 424;
+            bool templatesVerified = false;
 
             string Bytes(MemoryBuffer@ buffer) {
                 buffer.Seek(0);
@@ -96,8 +98,8 @@ namespace WaterFields {
                         );
                     }
                 }
-                ValidateDescription(native, 2571, "TrackWallWithHoleWater");
-                ValidateDescription(wrapper, 424, "No Description");
+                ValidateDescription(native, nativeDescriptionOffset, "TrackWallWithHoleWater");
+                ValidateDescription(wrapper, wrapperDescriptionOffset, "No Description");
             }
 
             void PatchIdentity(MemoryBuffer@ buffer, Json::Value@ offsets, const string &in stem) {
@@ -111,7 +113,7 @@ namespace WaterFields {
                 }
             }
 
-            string Metadata(Fields::Field@ field) {
+            string Metadata(WaterFields::Fields::Field@ field) {
                 auto buffer = MemoryBuffer();
                 auto origin = field.LocalOrigin();
                 buffer.Write(origin.x);
@@ -178,7 +180,7 @@ namespace WaterFields {
                 for (uint i = 0; i < 46656; i++) {
                     string stem = Stem(i);
                     if (Taken(root, records, stem)) continue;
-                    if (root == IO::FromUserGameFolder(Root) &&
+                    if (root == IO::FromUserGameFolder(assetFolder) &&
                         Taken(IO::FromUserGameFolder("Blocks/WaterFields_v1/"), records, stem)) continue;
                     _IO::File::WriteNewVerified(root + "reservations/" + stem + ".json", "{\"stem\":\"" + stem + "\"}");
                     result.field.stem = stem;
@@ -195,12 +197,12 @@ namespace WaterFields {
                 try {
                     Fields::Validate(result.field);
                     auto manifest = Templates::Manifest();
-                    auto native = Templates::Read(Templates::Native);
-                    auto wrapper = Templates::Read(Templates::Wrapper);
-                    auto prefab = Templates::Read(Templates::Prefab);
-                    if (!g_templatesVerified) {
+                    auto native = Templates::Read(Templates::nativePath);
+                    auto wrapper = Templates::Read(Templates::wrapperPath);
+                    auto prefab = Templates::Read(Templates::prefabPath);
+                    if (!templatesVerified) {
                         ValidateTemplates(native, wrapper, prefab, manifest);
-                        g_templatesVerified = true;
+                        templatesVerified = true;
                     }
                     Reserve(result, root, records);
                     auto field = result.field;
@@ -219,8 +221,8 @@ namespace WaterFields {
                         native.Write(field.size.z);
                     }
                     string metadata = Metadata(field);
-                    string nativeBytes = WithDescription(native, 2571, metadata);
-                    string wrapperBytes = WithDescription(wrapper, 424, metadata);
+                    string nativeBytes = WithDescription(native, nativeDescriptionOffset, metadata);
+                    string wrapperBytes = WithDescription(wrapper, wrapperDescriptionOffset, metadata);
                     string prefabBytes = Bytes(prefab);
                     result.nativeBytes = nativeBytes;
                     result.wrapperBytes = wrapperBytes;
