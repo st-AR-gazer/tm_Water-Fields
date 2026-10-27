@@ -2,8 +2,22 @@ namespace WaterFields {
     namespace Ui {
         void Preferences() {
             UI::BeginDisabled(Authoring::Input::leftOwned);
+            UI::SetNextItemWidth(140);
             float scale = UI::InputFloat("Cube size (m)", App::S_CubeScale, 0.25f, 1.0f);
             if (scale >= 0.25f && scale <= Fields::maxHeight) App::S_CubeScale = scale;
+            auto editor = Authoring::Input::Editor();
+            UI::SameLine();
+            UI::BeginDisabled(editor is null);
+            if (UI::Button(Icons::ArrowDown + "##OrbitDown")) {
+                editor.PluginMapType.CameraTargetPosition -= vec3(0, App::S_CubeScale, 0);
+            }
+            UI::SetItemTooltip("Move the orbit point down by one cube.");
+            UI::SameLine();
+            if (UI::Button(Icons::ArrowUp + "##OrbitUp")) {
+                editor.PluginMapType.CameraTargetPosition += vec3(0, App::S_CubeScale, 0);
+            }
+            UI::SetItemTooltip("Move the orbit point up by one cube.");
+            UI::EndDisabled();
             App::S_PreviewOutsideMode = UI::Checkbox("Show fields outside water mode", App::S_PreviewOutsideMode);
             UI::EndDisabled();
         }
@@ -54,6 +68,10 @@ namespace WaterFields {
                 }
                 if (Authoring::Input::statusMessage.Length > 0) UI::TextWrapped(Authoring::Input::statusMessage);
                 if (Authoring::Input::scanMessage.Length > 0) UI::TextWrapped(Authoring::Input::scanMessage);
+                if (Authoring::Linked::message.Length > 0) {
+                    UI::TextWrapped(Authoring::Linked::message);
+                    if (UI::Button("Retry linked edits")) Authoring::Linked::Retry();
+                }
                 UI::TextWrapped("Native saves strip the water model. Use the export step to preserve water in a shared map.");
             }
             UI::End();

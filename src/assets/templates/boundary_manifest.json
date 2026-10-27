@@ -1,0 +1,1099 @@
+{
+  "schema": "water-boundary-template-v31",
+  "stem": "v31_000_Water_Boundary",
+  "material": "Stadium\\Media\\Material\\Water",
+  "identityOffsets": [
+    94,
+    172,
+    281,
+    340
+  ],
+  "coordinates": [
+    {
+      "offset": 792,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 804,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 828,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 888,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 912,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 924,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 936,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 972,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 996,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1008,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1044,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1068,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1080,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1092,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1104,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1116,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1128,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1140,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1152,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1164,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1176,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1188,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1200,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1212,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1368,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1404,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1428,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1440,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1476,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1500,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1512,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1524,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1548,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1608,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1632,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 1644,
+      "axis": 0,
+      "side": 0
+    },
+    {
+      "offset": 816,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 840,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 852,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 864,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 876,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 900,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 948,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 960,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 984,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1020,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1032,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1056,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1224,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1236,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1248,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1260,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1272,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1284,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1296,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1308,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1320,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1332,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1344,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1356,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1380,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1392,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1416,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1452,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1464,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1488,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1536,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1560,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1572,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1584,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1596,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 1620,
+      "axis": 0,
+      "side": 1
+    },
+    {
+      "offset": 796,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 832,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 856,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 868,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 904,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 928,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 940,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 952,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 976,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1036,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1060,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1072,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1084,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1096,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1120,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1180,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1204,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1216,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1228,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1264,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1288,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1300,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1336,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1360,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1372,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1384,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1396,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1408,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1420,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1432,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1444,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1456,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1468,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1480,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1492,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 1504,
+      "axis": 1,
+      "side": 0
+    },
+    {
+      "offset": 808,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 820,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 844,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 880,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 892,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 916,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 964,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 988,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1000,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1012,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1024,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1048,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1108,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1132,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1144,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1156,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1168,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1192,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1240,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1252,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1276,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1312,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1324,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1348,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1516,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1528,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1540,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1552,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1564,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1576,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1588,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1600,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1612,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1624,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1636,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 1648,
+      "axis": 1,
+      "side": 1
+    },
+    {
+      "offset": 800,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 812,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 824,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 836,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 848,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 860,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 872,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 884,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 896,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 908,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 920,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 932,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1088,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1124,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1148,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1160,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1196,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1220,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1232,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1244,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1268,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1328,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1352,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1364,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1376,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1388,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1412,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1472,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1496,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1508,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1520,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1556,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1580,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1592,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1628,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 1652,
+      "axis": 2,
+      "side": 0
+    },
+    {
+      "offset": 944,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 956,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 968,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 980,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 992,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1004,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1016,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1028,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1040,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1052,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1064,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1076,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1100,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1112,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1136,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1172,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1184,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1208,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1256,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1280,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1292,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1304,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1316,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1340,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1400,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1424,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1436,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1448,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1460,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1484,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1532,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1544,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1568,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1604,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1616,
+      "axis": 2,
+      "side": 1
+    },
+    {
+      "offset": 1640,
+      "axis": 2,
+      "side": 1
+    }
+  ],
+  "boundsOffsets": [
+    3676
+  ],
+  "collisionTriangles": 0,
+  "runtimePointers": 0,
+  "resourceIndices": 0
+}

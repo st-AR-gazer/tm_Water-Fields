@@ -11,6 +11,7 @@ namespace WaterFields {
             string nativeBytes;
             string wrapperBytes;
             string prefabBytes;
+            string boundaryBytes;
             string mapUid;
             string mapFileName;
 
@@ -33,6 +34,7 @@ namespace WaterFields {
                 record["nativeByteCount"] = nativeBytes.Length;
                 record["wrapperByteCount"] = wrapperBytes.Length;
                 record["prefabByteCount"] = prefabBytes.Length;
+                record["boundaryItem"] = field.boundary ? Boundaries::Id(field) : "";
                 record["error"] = error;
                 record["mapSaves"] = 0;
                 return record;

@@ -20,8 +20,9 @@ namespace WaterFields {
             field.anchor = int3(block.Coord.x, block.Coord.y, block.Coord.z);
             field.variant = block.BlockInfoVariantIndex;
             field.isGround = block.IsGround;
-            string prefix = "WaterFields:1:" + field.stem + ":";
             string description = block.BlockInfo.Description;
+            field.boundary = description.StartsWith("WaterFields:2:");
+            string prefix = "WaterFields:" + (field.boundary ? "2:" : "1:") + field.stem + ":";
             Fields::Require(
                 description.StartsWith(prefix) && description.Length == prefix.Length + 48,
                 "Water field metadata is missing or unsupported."
@@ -60,7 +61,8 @@ namespace WaterFields {
                    a.minimum == b.minimum &&
                    a.size == b.size &&
                    a.variant == b.variant &&
-                   a.isGround == b.isGround;
+                   a.isGround == b.isGround &&
+                   a.boundary == b.boundary;
         }
 
         bool SameFields(
@@ -96,6 +98,23 @@ namespace WaterFields {
                    coord.z < size.z - 1;
         }
 
+        array<nat3> GetTerrainCells(CGameEditorPluginMapMapType@ editor) {
+            array<nat3> cells;
+            for (uint i = 0; i < editor.TerrainBlocks.Length; i++) {
+                auto block = editor.TerrainBlocks[i];
+                cells.InsertLast(block.Coord);
+                for (uint j = 0; j < block.BlockUnits.Length; j++) {
+                    auto offset = block.BlockUnits[j].AbsoluteOffset;
+                    cells.InsertLast(nat3(
+                        block.Coord.x + offset.x,
+                        block.Coord.y + offset.y,
+                        block.Coord.z + offset.z
+                    ));
+                }
+            }
+            return cells;
+        }
+
         int3 FreeAnchor(CGameEditorPluginMapMapType@ editor, const vec3 &in minimum) {
             auto size = editor.Map.Size;
             Fields::Require(
@@ -108,7 +127,10 @@ namespace WaterFields {
                 uint(Math::Clamp(Math::Floor(minimum.z / 32), 1.0f, float(size.z - 2)))
             );
             array<uint64> occupied;
-
+            auto terrain = GetTerrainCells(editor);
+            for (uint i = 0; i < terrain.Length; i++) {
+                if (UsableAnchor(terrain[i], size)) occupied.InsertLast(AnchorIndex(terrain[i], size));
+            }
             for (uint i = 0; i < editor.ClassicBlocks.Length; i++) {
                 auto coord = editor.ClassicBlocks[i].Coord;
                 if (UsableAnchor(coord, size)) occupied.InsertLast(AnchorIndex(coord, size));

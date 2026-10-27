@@ -76,6 +76,13 @@ namespace WaterFields {
                 "The carrier anchor must be inside this map's grid."
             );
             Fields::ValidateMapBounds(field, size);
+            auto terrain = GetTerrainCells(editor);
+            for (uint i = 0; i < terrain.Length; i++) {
+                Fields::Require(
+                    terrain[i] != nat3(anchor.x, anchor.y, anchor.z),
+                    "The carrier anchor overlaps terrain. Choose a free anchor before placing water."
+                );
+            }
             for (uint i = 0; i < editor.ClassicBlocks.Length; i++) {
                 Fields::Require(
                     !AtAnchor(editor.ClassicBlocks[i], anchor),
@@ -104,6 +111,14 @@ namespace WaterFields {
         }
 
         void RollBack(Result@ result) {
+            if (result.field.boundary) {
+                try {
+                    auto boundary = Boundaries::Find(result.field);
+                    if (boundary !is null) Boundaries::Change(result.field, boundary.ItemModel, false);
+                } catch {
+                    result.error += " Boundary rollback: " + getExceptionInfo();
+                }
+            }
             try {
                 auto editor = ReadyEditor();
                 auto block = FindPlaced(editor, result.field);
@@ -115,6 +130,7 @@ namespace WaterFields {
                     );
                 }
                 result.placement = FindPlaced(editor, result.field) is null ? "rolled-back" : "residual";
+                if (result.field.boundary && Boundaries::Count(result.field, true) > 0) result.placement = "residual";
             } catch {
                 result.placement = "residual";
                 result.error += " Rollback could not be verified: " + getExceptionInfo();
@@ -171,6 +187,8 @@ namespace WaterFields {
                 );
                 auto model = cast<CGameCtnBlockInfo>(item.EntityModel);
                 VerifyBlockModel(model, field);
+                CGameItemModel@ boundary;
+                if (field.boundary) @boundary = Boundaries::Load(field);
                 auto direction = CGameEditorPluginMap::ECardinalDirections::North;
                 Fields::Require(
                     editor.CanPlaceGhostBlock(model, field.anchor, direction),
@@ -193,6 +211,7 @@ namespace WaterFields {
                 VerifyBlockModel(block.BlockInfo, field);
                 field.variant = block.BlockInfoVariantIndex;
                 field.isGround = block.IsGround;
+                if (field.boundary) Boundaries::Change(field, boundary, true);
                 result.placement = "placed";
             } catch {
                 result.error = getExceptionInfo();
@@ -213,6 +232,7 @@ namespace WaterFields {
             result.field.minimum = minimum;
             result.field.size = size;
             result.field.anchor = anchor;
+            result.field.boundary = true;
             try {
                 Fields::Validate(result.field);
                 auto editor = ReadyEditor();
@@ -231,6 +251,7 @@ namespace WaterFields {
             }
             if (result.placement == "placed" || result.placement == "residual") {
                 History::edits.Record({result.field}, true);
+                Linked::Remember(result.field);
             }
             @lastResult = result;
             log::Info(result.Summary(), "WaterFields::Authoring::Create");

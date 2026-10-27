@@ -21,6 +21,7 @@ namespace WaterFields {
             Authoring::Input::regions.Rebuild(Authoring::Input::placedFields);
             Authoring::Input::windowOpen = false;
             Authoring::Shutdown();
+            Authoring::Linked::Reset();
             Export::Shutdown();
             Authoring::Assets::templatesVerified = false;
             @Authoring::lastResult = null;
@@ -32,6 +33,7 @@ namespace WaterFields {
         void Update(float dt) {
             if (!initialized) return;
             Authoring::Update();
+            Authoring::Linked::Update();
             Export::Update();
         }
 

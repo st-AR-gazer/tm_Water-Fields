@@ -123,7 +123,7 @@ namespace WaterFields {
                 buffer.Write(field.size.y);
                 buffer.Write(field.size.z);
                 buffer.Seek(0);
-                string metadata = "WaterFields:1:" + field.stem + ":";
+                string metadata = "WaterFields:" + (field.boundary ? "2:" : "1:") + field.stem + ":";
                 for (uint i = 0; i < 6; i++) metadata += Text::Format("%08x", buffer.ReadUInt32());
                 return metadata;
             }
@@ -170,6 +170,9 @@ namespace WaterFields {
                        Exists(root + "reservations/" + stem + ".json") ||
                        Exists(records + stem + ".json") ||
                        Exists(root + stem + ".Block.Gbx") ||
+                       Exists(IO::FromUserGameFolder(Boundaries::assetFolder) +
+                              stem.SubStr(0, 7) +
+                              "_Water_Boundary.Item.Gbx") ||
                        Exists(root + "Native/" + stem + ".EDClassic.Gbx") ||
                        Exists(root + "Native/" + stem + ".Prefab.Gbx");
             }
@@ -232,6 +235,7 @@ namespace WaterFields {
                     _IO::File::WriteNewVerified(root + "Native/" + field.stem + ".Prefab.Gbx", prefabBytes);
                     _IO::File::WriteNewVerified(root + "Native/" + field.stem + ".EDClassic.Gbx", nativeBytes);
                     _IO::File::WriteNewVerified(root + field.stem + ".Block.Gbx", wrapperBytes);
+                    if (field.boundary) Boundaries::Generate(result);
                     result.generation = "verified";
                 } catch {
                     result.generation = "failed";

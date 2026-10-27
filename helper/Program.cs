@@ -15,7 +15,8 @@ using GBX.NET.Serialization.Chunking;
 
 namespace WaterFields.Export;
 
-internal static class Program {
+internal static class Program
+{
     private const int mapLimit = 512 * 1024 * 1024;
     private const int assetLimit = 1024 * 1024;
     private const string modelSuffix = ".Block.Gbx_CustomBlock";
@@ -25,7 +26,8 @@ internal static class Program {
     private const int nativeDescriptionOffset = 2571;
     private const int wrapperDescriptionOffset = 424;
 
-    internal static JsonObject Run(string requestPath, CancellationToken deadline) {
+    internal static JsonObject Run(string requestPath, CancellationToken deadline)
+    {
         Gbx.LZO = new Lzo();
 
         var requestBytes = Read(requestPath, 65536);
@@ -54,13 +56,16 @@ internal static class Program {
         return Export(input, output, assets, mapUid, deadline);
     }
 
-    private static void Require(bool valid, string message) {
-        if (!valid) {
+    private static void Require(bool valid, string message)
+    {
+        if (!valid)
+        {
             throw new InvalidDataException(message);
         }
     }
 
-    private static byte[] Read(string path, int limit) {
+    private static byte[] Read(string path, int limit)
+    {
         using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         Require(file.Length > 0 && file.Length <= limit, "Input size is outside the supported range: " + path);
 
@@ -70,24 +75,28 @@ internal static class Program {
         return bytes;
     }
 
-    private static Gbx<CGameCtnChallenge> ParseMap(byte[] bytes) {
+    private static Gbx<CGameCtnChallenge> ParseMap(byte[] bytes)
+    {
         using var stream = new MemoryStream(bytes, false);
         var gbx = Gbx.Parse<CGameCtnChallenge>(stream, Limits(mapLimit));
 
-        if (gbx.Body.Exception is not null) {
+        if (gbx.Body.Exception is not null)
+        {
             throw gbx.Body.Exception;
         }
 
         return gbx;
     }
 
-    private static GbxReadSettings Limits(int size) => new() {
+    private static GbxReadSettings Limits(int size) => new()
+    {
         MaxDataSize = size,
         MaxUncompressedBodySize = size,
         MaxCompressedBodySize = size
     };
 
-    private static byte[] Save(Gbx gbx) {
+    private static byte[] Save(Gbx gbx)
+    {
         using var stream = new MemoryStream();
         gbx.Save(stream);
 
@@ -96,14 +105,16 @@ internal static class Program {
         return stream.ToArray();
     }
 
-    private static byte[] Content(byte[] bytes) {
+    private static byte[] Content(byte[] bytes)
+    {
         var gbx = ParseMap(bytes);
         gbx.Node.EmbeddedZipData = [];
 
         return Save(gbx);
     }
 
-    private static byte[] Template(string name) {
+    private static byte[] Template(string name)
+    {
         string resourceName = "WaterFields.Templates." + name;
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName) ??
                            throw new InvalidDataException("Missing helper template: " + name);
@@ -113,7 +124,8 @@ internal static class Program {
         return copy.ToArray();
     }
 
-    private static byte[] WithDescription(byte[] bytes, int offset, string description) {
+    private static byte[] WithDescription(byte[] bytes, int offset, string description)
+    {
         int length = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(offset));
         var text = Encoding.UTF8.GetBytes(description);
         var prefix = bytes[..offset];
@@ -126,10 +138,12 @@ internal static class Program {
             .ToArray();
     }
 
-    private static void ValidateAssets(string stem, Dictionary<string, byte[]> files) {
+    private static float[] ValidateAssets(string stem, Dictionary<string, byte[]> files)
+    {
         var wrapper = ReadWrapper(files[stem + ".Block.Gbx"]).Node;
-        string prefix = "WaterFields:1:" + stem + ":";
         string metadata = wrapper.Description ?? "";
+        string version = metadata.StartsWith("WaterFields:2:", StringComparison.Ordinal) ? "2" : "1";
+        string prefix = "WaterFields:" + version + ":" + stem + ":";
 
         Require(
             metadata.StartsWith(prefix, StringComparison.Ordinal)
@@ -139,7 +153,8 @@ internal static class Program {
 
         var values = new float[6];
 
-        for (int i = 0; i < values.Length; i++) {
+        for (int i = 0; i < values.Length; i++)
+        {
             string hex = metadata.Substring(prefix.Length + i * 8, 8);
             uint bits = Convert.ToUInt32(hex, 16);
             values[i] = BitConverter.UInt32BitsToSingle(bits);
@@ -163,8 +178,10 @@ internal static class Program {
         foreach (var (bytes, key) in new[] {
             (native, "nativeIdentityOffsets"),
             (expectedWrapper, "wrapperIdentityOffsets")
-        }) {
-            foreach (var offset in manifest.RootElement.GetProperty(key).EnumerateArray()) {
+        })
+        {
+            foreach (var offset in manifest.RootElement.GetProperty(key).EnumerateArray())
+            {
                 stemBytes.CopyTo(bytes, offset.GetInt32() - 4);
             }
         }
@@ -180,7 +197,8 @@ internal static class Program {
         ];
         var transformBytes = transformValues.SelectMany(BitConverter.GetBytes).ToArray();
 
-        foreach (var offset in manifest.RootElement.GetProperty("waterOffsets").EnumerateArray()) {
+        foreach (var offset in manifest.RootElement.GetProperty("waterOffsets").EnumerateArray())
+        {
             transformBytes.CopyTo(native, offset.GetInt32());
         }
 
@@ -201,12 +219,14 @@ internal static class Program {
             "Generated prefab asset differs from the water recipe: " + stem
         );
 
-        foreach (var (path, bytes) in files) {
+        foreach (var (path, bytes) in files)
+        {
             using var stream = new MemoryStream(bytes, false);
             var gbx = Gbx.ParseHeader(stream);
             var refs = gbx.RefTable;
 
-            if (refs is null) {
+            if (refs is null)
+            {
                 continue;
             }
 
@@ -214,15 +234,50 @@ internal static class Program {
 
             string directory = Path.GetDirectoryName(path) ?? "";
 
-            foreach (var reference in refs.Files) {
+            foreach (var reference in refs.Files)
+            {
                 string dependency = Path.Combine(directory, reference.FilePath).Replace('\\', '/');
 
                 Require(files.ContainsKey(dependency), "Missing asset dependency: " + path + " -> " + dependency);
             }
         }
+
+        return values;
     }
 
-    private static Gbx<CGameItemModel> ReadWrapper(byte[] bytes) {
+    private static byte[] BuildBoundary(string stem, float[] values)
+    {
+        var bytes = Template("boundary.Item.Gbx");
+        using var manifest = JsonDocument.Parse(Template("boundary_manifest.json"));
+        var root = manifest.RootElement;
+        var identity = Encoding.ASCII.GetBytes(stem[..7] + "_Water_Boundary");
+
+        foreach (var offset in root.GetProperty("identityOffsets").EnumerateArray())
+        {
+            identity.CopyTo(bytes, offset.GetInt32() - 4);
+        }
+
+        foreach (var coordinate in root.GetProperty("coordinates").EnumerateArray())
+        {
+            int axis = coordinate.GetProperty("axis").GetInt32();
+            int offset = coordinate.GetProperty("offset").GetInt32();
+            float side = coordinate.GetProperty("side").GetSingle();
+            BitConverter.GetBytes(values[axis + 3] * side).CopyTo(bytes, offset);
+        }
+
+        foreach (var offset in root.GetProperty("boundsOffsets").EnumerateArray())
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                BitConverter.GetBytes(values[3 + i % 3] / 2).CopyTo(bytes, offset.GetInt32() + i * 4);
+            }
+        }
+
+        return bytes;
+    }
+
+    private static Gbx<CGameItemModel> ReadWrapper(byte[] bytes)
+    {
         var copy = bytes.ToArray();
 
         BinaryPrimitives.WriteInt32LittleEndian(
@@ -233,17 +288,20 @@ internal static class Program {
         using var stream = new MemoryStream(copy, false);
         var gbx = Gbx.Parse<CGameItemModel>(stream, Limits(assetLimit));
 
-        if (gbx.Body.Exception is not null) {
+        if (gbx.Body.Exception is not null)
+        {
             throw gbx.Body.Exception;
         }
 
         return gbx;
     }
 
-    private static Dictionary<string, byte[]> ReadZip(CGameCtnChallenge map, Dictionary<string, string> aliases) {
+    private static Dictionary<string, byte[]> ReadZip(CGameCtnChallenge map, Dictionary<string, string> aliases)
+    {
         var entries = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
 
-        if (map.EmbeddedZipData is not { Length: > 0 }) {
+        if (map.EmbeddedZipData is not { Length: > 0 })
+        {
             return entries;
         }
 
@@ -251,7 +309,8 @@ internal static class Program {
         Require(zip.Entries.Count <= 16384, "Too many embedded files.");
         long total = 0;
 
-        foreach (var entry in zip.Entries) {
+        foreach (var entry in zip.Entries)
+        {
             string path = entry.FullName.Replace('\\', '/');
             string key = aliases.GetValueOrDefault(path, path);
 
@@ -276,11 +335,14 @@ internal static class Program {
         return entries;
     }
 
-    private static byte[] WriteZip(Dictionary<string, byte[]> entries) {
+    private static byte[] WriteZip(Dictionary<string, byte[]> entries)
+    {
         using var buffer = new MemoryStream();
 
-        using (var zip = new ZipArchive(buffer, ZipArchiveMode.Create, true)) {
-            foreach (var (path, bytes) in entries) {
+        using (var zip = new ZipArchive(buffer, ZipArchiveMode.Create, true))
+        {
+            foreach (var (path, bytes) in entries)
+            {
                 var entry = zip.CreateEntry(path, CompressionLevel.Optimal);
                 entry.LastWriteTime = new DateTimeOffset(2000, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
@@ -298,7 +360,8 @@ internal static class Program {
         string assetRoot,
         string mapUid,
         CancellationToken deadline
-    ) {
+    )
+    {
         deadline.ThrowIfCancellationRequested();
 
         var original = Read(input, mapLimit);
@@ -321,7 +384,8 @@ internal static class Program {
         var aliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var identities = new List<Ident>();
 
-        foreach (var field in fields) {
+        foreach (var field in fields)
+        {
             deadline.ThrowIfCancellationRequested();
 
             string stem = field.Key;
@@ -336,7 +400,8 @@ internal static class Program {
                 stem + ".Block.Gbx",
                 "Native/" + stem + ".EDClassic.Gbx",
                 "Native/" + stem + ".Prefab.Gbx"
-            }) {
+            })
+            {
                 string source = Path.Combine(assetRoot, path);
                 var bytes = Read(source, assetLimit);
 
@@ -344,12 +409,53 @@ internal static class Program {
                 evidence.Add(source, bytes);
                 files.Add("Blocks/" + path, bytes);
 
-                if (path.EndsWith(".Block.Gbx", StringComparison.Ordinal)) {
+                if (path.EndsWith(".Block.Gbx", StringComparison.Ordinal))
+                {
                     aliases.Add(source.Replace('\\', '/'), "Blocks/" + path);
                 }
             }
 
-            ValidateAssets(stem, built);
+            var values = ValidateAssets(stem, built);
+
+            string metadata = ReadWrapper(built[stem + ".Block.Gbx"]).Node.Description ?? "";
+            if (metadata.StartsWith("WaterFields:2:", StringComparison.Ordinal))
+            {
+                string boundaryId = "WaterFieldsBoundaries_v1/" + stem[..7] + "_Water_Boundary.Item.Gbx";
+                var items = (map.AnchoredObjects ?? [])
+                    .Where(item => item.ItemModel.Id.Replace('\\', '/') == boundaryId)
+                    .ToArray();
+
+                Require(items.Length == field.Count(), "Missing or copied water boundary: " + stem);
+                foreach (var block in field)
+                {
+                    var minimum = new Vec3(
+                        block.Coord.X * 32 + values[0],
+                        (block.Coord.Y - 8) * 8 + values[1],
+                        block.Coord.Z * 32 + values[2]
+                    );
+                    Require(
+                        items.Count(item => item.AbsolutePositionInMap == minimum
+                            && item.YawPitchRoll == new Vec3() && item.Scale == 1) == 1,
+                        "A water boundary was moved, rotated, scaled or duplicated: " + stem
+                    );
+                }
+
+                var expected = BuildBoundary(stem, values);
+                using var boundaryStream = new MemoryStream(expected, false);
+                var boundaryIdentity = Gbx.Parse<CGameItemModel>(boundaryStream, Limits(assetLimit)).Node.Ident;
+                Require(
+                    items.All(item => item.ItemModel.Author == boundaryIdentity.Author
+                        && item.ItemModel.Collection == boundaryIdentity.Collection),
+                    "Saved boundary binding differs from its package: " + stem
+                );
+                identities.Add(boundaryIdentity);
+                string source = Path.GetFullPath(Path.Combine(assetRoot, "../../Items", boundaryId));
+                var bytes = Read(source, assetLimit);
+                Require(bytes.SequenceEqual(expected), "Water boundary differs from its recipe: " + stem);
+                evidence.Add(source, bytes);
+                files.Add("Items/" + boundaryId, bytes);
+                aliases.Add(source.Replace('\\', '/'), "Items/" + boundaryId);
+            }
 
             var ident = ReadWrapper(built[stem + ".Block.Gbx"]).Node.Ident;
             Require(
@@ -364,15 +470,18 @@ internal static class Program {
             identities.Add(ident);
         }
 
-        if (!map.Chunks.OfType<CGameCtnChallenge.Chunk03043054>().Any()) {
+        if (!map.Chunks.OfType<CGameCtnChallenge.Chunk03043054>().Any())
+        {
             map.Chunks.Create<CGameCtnChallenge.Chunk03043054>();
         }
 
         var comparison = Content(Save(gbx));
         var entries = ReadZip(map, aliases);
 
-        foreach (var (path, bytes) in files) {
-            if (entries.TryGetValue(path, out var old) && !old.SequenceEqual(bytes)) {
+        foreach (var (path, bytes) in files)
+        {
+            if (entries.TryGetValue(path, out var old) && !old.SequenceEqual(bytes))
+            {
                 Require(
                     path.EndsWith(".Block.Gbx", StringComparison.Ordinal),
                     "Conflicting embedded dependency: " + path
@@ -394,14 +503,16 @@ internal static class Program {
 
         Require(savedEntries.Count == entries.Count, "Export changed the embedded file count.");
 
-        foreach (var (path, bytes) in entries) {
+        foreach (var (path, bytes) in entries)
+        {
             Require(
                 savedEntries.TryGetValue(path, out var savedBytes) && savedBytes.SequenceEqual(bytes),
                 "Export is missing or changed an embedded dependency: " + path
             );
         }
 
-        foreach (var identity in identities) {
+        foreach (var identity in identities)
+        {
             Require(
                 saved.ExpectedEmbeddedItemModels?.Contains(identity) == true,
                 "Export is missing a water model identity: " + identity.Id
@@ -410,15 +521,18 @@ internal static class Program {
 
         Require(Read(input, mapLimit).SequenceEqual(original), "Input map changed during export.");
 
-        foreach (var (path, bytes) in evidence) {
+        foreach (var (path, bytes) in evidence)
+        {
             Require(Read(path, assetLimit).SequenceEqual(bytes), "Source asset changed during export: " + path);
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         string temporary = output + "." + Guid.NewGuid().ToString("N") + ".tmp";
 
-        try {
-            using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None)) {
+        try
+        {
+            using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
                 file.Write(result);
                 file.Flush(true);
             }
@@ -427,13 +541,17 @@ internal static class Program {
             deadline.ThrowIfCancellationRequested();
 
             File.Move(temporary, output, false);
-        } finally {
-            if (File.Exists(temporary)) {
+        }
+        finally
+        {
+            if (File.Exists(temporary))
+            {
                 File.Delete(temporary);
             }
         }
 
-        var receipt = new JsonObject {
+        var receipt = new JsonObject
+        {
             ["schema"] = "waterfields-export-result-v1",
             ["status"] = "verified",
             ["input"] = input,
@@ -448,7 +566,8 @@ internal static class Program {
             ["embeddedFiles"] = entries.Count
         };
 
-        try {
+        try
+        {
             using var file = new FileStream(output + ".json", FileMode.CreateNew, FileAccess.Write, FileShare.None);
             var receiptBytes = Encoding.UTF8.GetBytes(
                 receipt.ToJsonString(new JsonSerializerOptions { WriteIndented = true })
@@ -456,48 +575,58 @@ internal static class Program {
 
             file.Write(receiptBytes);
             file.Flush(true);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             throw new IOException("Map written and verified, but its receipt failed: " + output, e);
         }
 
         return receipt;
     }
 
-    private static byte[] SaveUncompressed(Gbx gbx) {
+    private static byte[] SaveUncompressed(Gbx gbx)
+    {
         gbx.Header.Basic = gbx.Header.Basic with { CompressionOfBody = GbxCompression.Uncompressed };
 
         return Save(gbx);
     }
 
-    private static int HeaderTypeOffset(byte[] bytes) {
+    private static int HeaderTypeOffset(byte[] bytes)
+    {
         if (bytes.Length < 25
             || Encoding.ASCII.GetString(bytes, 0, 3) != "GBX"
             || BinaryPrimitives.ReadUInt16LittleEndian(bytes.AsSpan(3)) != 6
             || bytes[5] != (byte)'B'
-            || BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(9)) != 0x2E002000) {
+            || BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(9)) != 0x2E002000)
+        {
             throw new InvalidDataException("Expected binary GBX v6 CGameItemModel.");
         }
 
         var size = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(13));
         var count = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(17));
 
-        if (count is < 1 or > 64 || size < 4 + count * 8 || size > bytes.Length - 17) {
+        if (count is < 1 or > 64 || size < 4 + count * 8 || size > bytes.Length - 17)
+        {
             throw new InvalidDataException("Invalid header bounds.");
         }
 
         var cursor = 21 + count * 8;
         var result = -1;
 
-        for (var i = 0; i < count; i++) {
+        for (var i = 0; i < count; i++)
+        {
             var id = BinaryPrimitives.ReadUInt32LittleEndian(bytes.AsSpan(21 + i * 8));
             var length = BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(25 + i * 8)) & int.MaxValue;
 
-            if (length > 17 + size - cursor) {
+            if (length > 17 + size - cursor)
+            {
                 throw new InvalidDataException("Header payload exceeds bounds.");
             }
 
-            if (id == 0x2E002000) {
-                if (length != 4 || result >= 0) {
+            if (id == 0x2E002000)
+            {
+                if (length != 4 || result >= 0)
+                {
                     throw new InvalidDataException("Unexpected item-type header.");
                 }
 
@@ -507,20 +636,23 @@ internal static class Program {
             cursor += length;
         }
 
-        if (result < 0 || cursor != 17 + size) {
+        if (result < 0 || cursor != 17 + size)
+        {
             throw new InvalidDataException("Missing or malformed item-type header.");
         }
 
         return result;
     }
 
-    private static void ValidateStrippedWrapper(byte[] embedded, byte[] generated) {
+    private static void ValidateStrippedWrapper(byte[] embedded, byte[] generated)
+    {
         Require(embedded.Length <= assetLimit, "Embedded water wrapper is too large.");
 
         using var stream = new MemoryStream(embedded, false);
         var old = Gbx.Parse<CGameItemModel>(stream, Limits(assetLimit));
 
-        if (old.Body.Exception is not null) {
+        if (old.Body.Exception is not null)
+        {
             throw old.Body.Exception;
         }
 
@@ -553,7 +685,8 @@ internal static class Program {
             "Water recipe has customized variants."
         );
 
-        foreach (var recipe in new[] { oldRecipe, newRecipe }) {
+        foreach (var recipe in new[] { oldRecipe, newRecipe })
+        {
             Require(
                 recipe.Chunks.SingleOrDefault(c => c.Id == 0x2E025003) is ISkippableChunk,
                 "Missing empty variant-record metadata."

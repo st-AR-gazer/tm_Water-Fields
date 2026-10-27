@@ -10,6 +10,7 @@ namespace WaterFields {
             string stem;
             uint variant = 0;
             bool isGround = false;
+            bool boundary = false;
 
             vec3 LocalOrigin() const {
                 return minimum - vec3(float(anchor.x) * 32, (float(anchor.y) - 8) * 8, float(anchor.z) * 32);

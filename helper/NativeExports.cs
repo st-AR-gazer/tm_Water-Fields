@@ -5,7 +5,8 @@ using System.Text.Json.Nodes;
 
 namespace WaterFields.Export;
 
-internal static class NativeExports {
+internal static class NativeExports
+{
     private const int stateIdle = 0;
     private const int stateRunning = 1;
     private const int stateSucceeded = 2;
@@ -29,22 +30,26 @@ internal static class NativeExports {
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern uint GetModuleFileNameW(nint module, StringBuilder path, int capacity);
 
-    private static unsafe void PinLibrary() {
-        if (lzo != 0) {
+    private static unsafe void PinLibrary()
+    {
+        if (lzo != 0)
+        {
             return;
         }
 
         var startAddress = (nint)(delegate* unmanaged[Cdecl]<nint, int>)&Start;
         uint flags = moduleFlagPin | moduleFlagFromAddress;
 
-        if (!GetModuleHandleExW(flags, startAddress, out var module)) {
+        if (!GetModuleHandleExW(flags, startAddress, out var module))
+        {
             throw new IOException("Could not retain the export library.");
         }
 
         var path = new StringBuilder(32768);
         var length = GetModuleFileNameW(module, path, path.Capacity);
 
-        if (length == 0 || length >= path.Capacity) {
+        if (length == 0 || length >= path.Capacity)
+        {
             throw new IOException("Could not locate the export library.");
         }
 
@@ -53,20 +58,25 @@ internal static class NativeExports {
     }
 
     [UnmanagedCallersOnly(EntryPoint = "WaterFields_StartExportV1", CallConvs = [typeof(CallConvCdecl)])]
-    private static int Start(nint requestUtf8) {
-        lock (gate) {
-            if (state == stateRunning) {
+    private static int Start(nint requestUtf8)
+    {
+        lock (gate)
+        {
+            if (state == stateRunning)
+            {
                 return startBusy;
             }
 
             FileStream? result = null;
 
-            try {
+            try
+            {
                 PinLibrary();
 
                 var request = Marshal.PtrToStringUTF8(requestUtf8);
 
-                if (string.IsNullOrWhiteSpace(request)) {
+                if (string.IsNullOrWhiteSpace(request))
+                {
                     return startRejected;
                 }
 
@@ -78,7 +88,9 @@ internal static class NativeExports {
                 _ = Task.Run(() => Run(request, destination));
 
                 return startAccepted;
-            } catch {
+            }
+            catch
+            {
                 result?.Dispose();
                 state = stateFailed;
 
@@ -88,30 +100,40 @@ internal static class NativeExports {
     }
 
     [UnmanagedCallersOnly(EntryPoint = "WaterFields_ExportStateV1", CallConvs = [typeof(CallConvCdecl)])]
-    private static int State() {
-        try {
-            lock (gate) {
+    private static int State()
+    {
+        try
+        {
+            lock (gate)
+            {
                 PinLibrary();
             }
 
             return Volatile.Read(ref state);
-        } catch {
+        }
+        catch
+        {
             return stateFailed;
         }
     }
 
-    private static void Run(string request, FileStream destination) {
+    private static void Run(string request, FileStream destination)
+    {
         JsonObject result;
         var finalState = stateSucceeded;
 
-        try {
+        try
+        {
             using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             result = Program.Run(request, deadline.Token);
-        } catch (Exception e) {
+        }
+        catch (Exception e)
+        {
             bool timedOut = e is OperationCanceledException;
             finalState = timedOut ? stateTimedOut : stateFailed;
 
-            result = new JsonObject {
+            result = new JsonObject
+            {
                 ["schema"] = "waterfields-export-result-v1",
                 ["status"] = timedOut ? "timed-out" : "failed",
                 ["error"] = timedOut ?
@@ -120,15 +142,21 @@ internal static class NativeExports {
             };
         }
 
-        try {
-            using (destination) {
+        try
+        {
+            using (destination)
+            {
                 var resultBytes = Encoding.UTF8.GetBytes(result.ToJsonString());
                 destination.Write(resultBytes);
                 destination.Flush(true);
             }
-        } catch {
+        }
+        catch
+        {
             finalState = stateFailed;
-        } finally {
+        }
+        finally
+        {
             Volatile.Write(ref state, finalState);
         }
     }
