@@ -10,12 +10,17 @@ namespace WaterFields {
             log::Start();
             if (!(S_CubeScale >= 0.25f && S_CubeScale <= Fields::maxHeight)) S_CubeScale = 8;
             initialized = true;
+            Saves::Start();
             log::Debug("Loaded " + pluginMeta.Name + " v" + pluginMeta.Version, "WaterFields::App::Start");
         }
 
         void Shutdown() {
             if (!initialized) return;
 
+            Authoring::Update();
+            Saves::nextUpdateAt = 0;
+            Saves::Update();
+            Saves::Stop();
             Authoring::Input::Stop();
             Authoring::Input::placedFields.Resize(0);
             Authoring::Input::regions.Rebuild(Authoring::Input::placedFields);
@@ -35,6 +40,7 @@ namespace WaterFields {
             Authoring::Update();
             Authoring::Linked::Update();
             Export::Update();
+            Saves::Update();
         }
 
         void RenderMenu() {

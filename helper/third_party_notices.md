@@ -1,6 +1,6 @@
 # WaterFields.Export dependencies
 
-Hayo! This is a native helper DLL. Its compression deps are required to be distributed under the GPL-3.0-or-later license (yukk). So... this helper uses that license xdd.
+Hayo! This is a small helper DLL, its compression deps are required to be distributed under the GPL-3.0-or-later license (yukk). So... this helper uses that license xdd.
 
 | Dependency | Version | Declared license | Source |
 | --- | --- | --- | --- |

@@ -160,4 +160,29 @@ internal static class NativeExports
             Volatile.Write(ref state, finalState);
         }
     }
+
+    [UnmanagedCallersOnly(EntryPoint = "WaterFields_SavePulseV1", CallConvs = [typeof(CallConvCdecl)])]
+    private static int SavePulse(nint requestUtf8)
+    {
+        try
+        {
+            lock (gate)
+            {
+                PinLibrary();
+            }
+            SaveGuard.Pulse(Marshal.PtrToStringUTF8(requestUtf8) ?? "");
+            return startAccepted;
+        }
+        catch
+        {
+            return startRejected;
+        }
+    }
+
+    [UnmanagedCallersOnly(EntryPoint = "WaterFields_SaveStopV1", CallConvs = [typeof(CallConvCdecl)])]
+    private static int SaveStop()
+    {
+        SaveGuard.Stop();
+        return startAccepted;
+    }
 }

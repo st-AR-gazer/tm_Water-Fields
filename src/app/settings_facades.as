@@ -7,6 +7,7 @@ namespace WaterFields {
                 S_AllowOutsideMapBorders = UI::Checkbox("Allow water outside map borders", S_AllowOutsideMapBorders);
                 UI::Text(Authoring::StateText());
                 if (Authoring::lastError.Length > 0) UI::TextWrapped(Authoring::lastError);
+                Saves::Render();
             }
             UI::EndChild();
         }

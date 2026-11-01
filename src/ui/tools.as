@@ -72,7 +72,7 @@ namespace WaterFields {
                     UI::TextWrapped(Authoring::Linked::message);
                     if (UI::Button("Retry linked edits")) Authoring::Linked::Retry();
                 }
-                UI::TextWrapped("Native saves strip the water model. Use the export step to preserve water in a shared map.");
+                Saves::Render();
             }
             UI::End();
             if (!Authoring::Input::windowOpen) Authoring::Input::Stop();

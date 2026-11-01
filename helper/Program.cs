@@ -53,10 +53,11 @@ internal static class Program
 
         string mapUid = root.GetProperty("mapUid").GetString()!;
 
-        return Export(input, output, assets, mapUid, deadline);
+        bool recovery = root.TryGetProperty("recoverMissing", out var recover) && recover.GetBoolean();
+        return Export(input, output, assets, mapUid, deadline, recovery);
     }
 
-    private static void Require(bool valid, string message)
+    internal static void Require(bool valid, string message)
     {
         if (!valid)
         {
@@ -64,7 +65,7 @@ internal static class Program
         }
     }
 
-    private static byte[] Read(string path, int limit)
+    internal static byte[] Read(string path, int limit)
     {
         using var file = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         Require(file.Length > 0 && file.Length <= limit, "Input size is outside the supported range: " + path);
@@ -75,7 +76,7 @@ internal static class Program
         return bytes;
     }
 
-    private static Gbx<CGameCtnChallenge> ParseMap(byte[] bytes)
+    internal static Gbx<CGameCtnChallenge> ParseMap(byte[] bytes)
     {
         using var stream = new MemoryStream(bytes, false);
         var gbx = Gbx.Parse<CGameCtnChallenge>(stream, Limits(mapLimit));
@@ -105,7 +106,7 @@ internal static class Program
         return stream.ToArray();
     }
 
-    private static byte[] Content(byte[] bytes)
+    internal static byte[] Content(byte[] bytes)
     {
         var gbx = ParseMap(bytes);
         gbx.Node.EmbeddedZipData = [];
@@ -170,6 +171,48 @@ internal static class Program
             "Unsupported water bounds."
         );
 
+        var expected = BuildAssets(stem, metadata, values);
+        Require(
+            files["Native/" + stem + ".EDClassic.Gbx"].SequenceEqual(expected["Native/" + stem + ".EDClassic.Gbx"]),
+            "Generated native asset differs from the water recipe: " + stem
+        );
+        Require(
+            files[stem + ".Block.Gbx"].SequenceEqual(expected[stem + ".Block.Gbx"]),
+            "Generated wrapper asset differs from the water recipe: " + stem
+        );
+        Require(
+            files["Native/" + stem + ".Prefab.Gbx"].SequenceEqual(expected["Native/" + stem + ".Prefab.Gbx"]),
+            "Generated prefab asset differs from the water recipe: " + stem
+        );
+
+        foreach (var (path, bytes) in files)
+        {
+            using var stream = new MemoryStream(bytes, false);
+            var gbx = Gbx.ParseHeader(stream);
+            var refs = gbx.RefTable;
+
+            if (refs is null)
+            {
+                continue;
+            }
+
+            Require(refs.AncestorLevel == 0 && refs.Resources.Count == 0, "Unsupported asset reference table: " + path);
+
+            string directory = Path.GetDirectoryName(path) ?? "";
+
+            foreach (var reference in refs.Files)
+            {
+                string dependency = Path.Combine(directory, reference.FilePath).Replace('\\', '/');
+
+                Require(files.ContainsKey(dependency), "Missing asset dependency: " + path + " -> " + dependency);
+            }
+        }
+
+        return values;
+    }
+
+    private static Dictionary<string, byte[]> BuildAssets(string stem, string metadata, float[] values)
+    {
         using var manifest = JsonDocument.Parse(Template("manifest.json"));
         var native = Template("v28_000_Water_Area.EDClassic.Gbx");
         var expectedWrapper = Template("v28_000_Water_Area.Block.Gbx");
@@ -206,43 +249,35 @@ internal static class Program
         expectedWrapper = WithDescription(expectedWrapper, wrapperDescriptionOffset, metadata);
         var expectedPrefab = Template("v28_000_Water_Area.Prefab.Gbx");
 
-        Require(
-            files["Native/" + stem + ".EDClassic.Gbx"].SequenceEqual(expectedNative),
-            "Generated native asset differs from the water recipe: " + stem
-        );
-        Require(
-            files[stem + ".Block.Gbx"].SequenceEqual(expectedWrapper),
-            "Generated wrapper asset differs from the water recipe: " + stem
-        );
-        Require(
-            files["Native/" + stem + ".Prefab.Gbx"].SequenceEqual(expectedPrefab),
-            "Generated prefab asset differs from the water recipe: " + stem
-        );
-
-        foreach (var (path, bytes) in files)
+        return new()
         {
-            using var stream = new MemoryStream(bytes, false);
-            var gbx = Gbx.ParseHeader(stream);
-            var refs = gbx.RefTable;
+            [stem + ".Block.Gbx"] = expectedWrapper,
+            ["Native/" + stem + ".EDClassic.Gbx"] = expectedNative,
+            ["Native/" + stem + ".Prefab.Gbx"] = expectedPrefab
+        };
+    }
 
-            if (refs is null)
-            {
-                continue;
-            }
-
-            Require(refs.AncestorLevel == 0 && refs.Resources.Count == 0, "Unsupported asset reference table: " + path);
-
-            string directory = Path.GetDirectoryName(path) ?? "";
-
-            foreach (var reference in refs.Files)
-            {
-                string dependency = Path.Combine(directory, reference.FilePath).Replace('\\', '/');
-
-                Require(files.ContainsKey(dependency), "Missing asset dependency: " + path + " -> " + dependency);
-            }
+    private static Dictionary<string, byte[]> RecoverAssets(string stem, byte[] embedded)
+    {
+        string metadata = ReadWrapper(embedded).Node.Description ?? "";
+        string prefix = "WaterFields:";
+        Require(metadata.StartsWith(prefix, StringComparison.Ordinal), "Missing recovery metadata.");
+        string hex = metadata.Split(':').Last();
+        Require(Regex.IsMatch(hex, "^[0-9a-f]{48}$"), "Malformed recovery bounds.");
+        var values = new float[6];
+        for (int i = 0; i < values.Length; i++)
+        {
+            values[i] = BitConverter.UInt32BitsToSingle(Convert.ToUInt32(hex.Substring(i * 8, 8), 16));
         }
 
-        return values;
+        var built = BuildAssets(stem, metadata, values);
+        ValidateAssets(stem, built);
+        var wrapper = built[stem + ".Block.Gbx"];
+        if (!embedded.SequenceEqual(wrapper))
+        {
+            ValidateStrippedWrapper(embedded, wrapper);
+        }
+        return built;
     }
 
     private static byte[] BuildBoundary(string stem, float[] values)
@@ -359,12 +394,88 @@ internal static class Program
         string output,
         string assetRoot,
         string mapUid,
-        CancellationToken deadline
+        CancellationToken deadline,
+        bool recoverMissing = false
     )
     {
         deadline.ThrowIfCancellationRequested();
 
         var original = Read(input, mapLimit);
+        var prepared = Prepare(original, assetRoot, mapUid, deadline, recoverMissing);
+        var result = prepared.bytes;
+        Require(Read(input, mapLimit).SequenceEqual(original), "Input map changed during export.");
+
+        Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+        string temporary = output + "." + Guid.NewGuid().ToString("N") + ".tmp";
+
+        try
+        {
+            using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+            {
+                file.Write(result);
+                file.Flush(true);
+            }
+
+            Require(Read(temporary, mapLimit).SequenceEqual(result), "Written export differs from verified bytes.");
+            deadline.ThrowIfCancellationRequested();
+            Require(Read(input, mapLimit).SequenceEqual(original), "Input map changed before export publication.");
+
+            File.Move(temporary, output, false);
+            Require(Read(output, mapLimit).SequenceEqual(result), "Export output changed after publication.");
+        }
+        finally
+        {
+            if (File.Exists(temporary))
+            {
+                File.Delete(temporary);
+            }
+        }
+
+        var receipt = new JsonObject
+        {
+            ["schema"] = "waterfields-export-result-v1",
+            ["status"] = "verified",
+            ["input"] = input,
+            ["output"] = output,
+            ["mapUid"] = mapUid,
+            ["fields"] = new JsonArray(prepared.fields.Select(f => (JsonNode?)JsonValue.Create(f)).ToArray()),
+            ["inputBytes"] = original.Length,
+            ["outputBytes"] = result.Length,
+            ["placementWrites"] = 0,
+            ["sourceUnchanged"] = true,
+            ["contentPreserved"] = true,
+            ["embeddedFiles"] = prepared.embeddedFiles
+        };
+
+        try
+        {
+            using var file = new FileStream(output + ".json", FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            var receiptBytes = Encoding.UTF8.GetBytes(
+                receipt.ToJsonString(new JsonSerializerOptions { WriteIndented = true })
+            );
+
+            file.Write(receiptBytes);
+            file.Flush(true);
+        }
+        catch (Exception e)
+        {
+            throw new IOException("Map written and verified, but its receipt failed: " + output, e);
+        }
+
+        return receipt;
+    }
+
+    internal sealed record Prepared(byte[] bytes, string[] fields, int embeddedFiles);
+
+    internal static Prepared Prepare(
+        byte[] original,
+        string assetRoot,
+        string mapUid,
+        CancellationToken deadline,
+        bool recoverMissing = false
+    )
+    {
+        deadline.ThrowIfCancellationRequested();
         var gbx = ParseMap(original);
         var map = gbx.Node;
 
@@ -383,6 +494,7 @@ internal static class Program
         var evidence = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
         var aliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var identities = new List<Ident>();
+        var embedded = ReadZip(map, aliases);
 
         foreach (var field in fields)
         {
@@ -395,6 +507,8 @@ internal static class Program
             );
 
             var built = new Dictionary<string, byte[]>();
+            Dictionary<string, byte[]>? recovered = null;
+
 
             foreach (var path in new[] {
                 stem + ".Block.Gbx",
@@ -403,10 +517,22 @@ internal static class Program
             })
             {
                 string source = Path.Combine(assetRoot, path);
-                var bytes = Read(source, assetLimit);
+                byte[] bytes;
+                if (File.Exists(source))
+                {
+                    bytes = Read(source, assetLimit);
+                    evidence.Add(source, bytes);
+                }
+                else
+                {
+                    Require(recoverMissing, "Missing water package: " + source);
+                    string wrapperPath = "Blocks/" + stem + ".Block.Gbx";
+                    Require(embedded.ContainsKey(wrapperPath), "No embedded metadata for recovery: " + stem);
+                    recovered ??= RecoverAssets(stem, embedded[wrapperPath]);
+                    bytes = recovered[path];
+                }
 
                 built.Add(path, bytes);
-                evidence.Add(source, bytes);
                 files.Add("Blocks/" + path, bytes);
 
                 if (path.EndsWith(".Block.Gbx", StringComparison.Ordinal))
@@ -450,9 +576,18 @@ internal static class Program
                 );
                 identities.Add(boundaryIdentity);
                 string source = Path.GetFullPath(Path.Combine(assetRoot, "../../Items", boundaryId));
-                var bytes = Read(source, assetLimit);
+                byte[] bytes;
+                if (File.Exists(source))
+                {
+                    bytes = Read(source, assetLimit);
+                    evidence.Add(source, bytes);
+                }
+                else
+                {
+                    Require(recoverMissing, "Missing boundary package: " + source);
+                    bytes = expected;
+                }
                 Require(bytes.SequenceEqual(expected), "Water boundary differs from its recipe: " + stem);
-                evidence.Add(source, bytes);
                 files.Add("Items/" + boundaryId, bytes);
                 aliases.Add(source.Replace('\\', '/'), "Items/" + boundaryId);
             }
@@ -519,69 +654,12 @@ internal static class Program
             );
         }
 
-        Require(Read(input, mapLimit).SequenceEqual(original), "Input map changed during export.");
-
         foreach (var (path, bytes) in evidence)
         {
             Require(Read(path, assetLimit).SequenceEqual(bytes), "Source asset changed during export: " + path);
         }
 
-        Directory.CreateDirectory(Path.GetDirectoryName(output)!);
-        string temporary = output + "." + Guid.NewGuid().ToString("N") + ".tmp";
-
-        try
-        {
-            using (var file = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None))
-            {
-                file.Write(result);
-                file.Flush(true);
-            }
-
-            Require(Read(temporary, mapLimit).SequenceEqual(result), "Written export differs from verified bytes.");
-            deadline.ThrowIfCancellationRequested();
-
-            File.Move(temporary, output, false);
-        }
-        finally
-        {
-            if (File.Exists(temporary))
-            {
-                File.Delete(temporary);
-            }
-        }
-
-        var receipt = new JsonObject
-        {
-            ["schema"] = "waterfields-export-result-v1",
-            ["status"] = "verified",
-            ["input"] = input,
-            ["output"] = output,
-            ["mapUid"] = mapUid,
-            ["fields"] = new JsonArray(fields.Select(f => (JsonNode?)JsonValue.Create(f.Key)).ToArray()),
-            ["inputBytes"] = original.Length,
-            ["outputBytes"] = result.Length,
-            ["placementWrites"] = 0,
-            ["sourceUnchanged"] = true,
-            ["contentPreserved"] = true,
-            ["embeddedFiles"] = entries.Count
-        };
-
-        try
-        {
-            using var file = new FileStream(output + ".json", FileMode.CreateNew, FileAccess.Write, FileShare.None);
-            var receiptBytes = Encoding.UTF8.GetBytes(
-                receipt.ToJsonString(new JsonSerializerOptions { WriteIndented = true })
-            );
-
-            file.Write(receiptBytes);
-            file.Flush(true);
-        }
-        catch (Exception e)
-        {
-            throw new IOException("Map written and verified, but its receipt failed: " + output, e);
-        }
-
-        return receipt;
+        return new Prepared(result, fields.Select(f => f.Key).ToArray(), entries.Count);
     }
 
     private static byte[] SaveUncompressed(Gbx gbx)
